@@ -130,6 +130,9 @@ void Grid::printToPrism(std::ostream& os, const prism::ModelType& modelType) {
   walkable.push_back(agent);
   walkable.insert(walkable.end(), adversaries.begin(), adversaries.end());
   walkable.insert(walkable.end(), lava.begin(), lava.end());
+  walkable.insert(walkable.end(), keys.begin(), keys.end());
+  walkable.insert(walkable.end(), lockedDoors.begin(), lockedDoors.end());
+
   for(auto const& c : walkable) {
     if(isBlocked(c.getNorth())) northRestriction.push_back(c);
     if(isBlocked(c.getEast()))   eastRestriction.push_back(c);
@@ -178,10 +181,11 @@ void Grid::printToPrism(std::ostream& os, const prism::ModelType& modelType) {
   size_t agentIndex  = 0;
   for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition, agentIndex++) {
     AgentName agentName = agentNameAndPosition->first;
+    //std::cout << "Agent Name: " << agentName << std::endl;
     bool agentWithView = std::find(gridOptions.agentsWithView.begin(), gridOptions.agentsWithView.end(), agentName) != gridOptions.agentsWithView.end();
     bool agentWithProbabilisticBehaviour = std::find(gridOptions.agentsWithProbabilisticBehaviour.begin(), gridOptions.agentsWithProbabilisticBehaviour.end(), agentName) != gridOptions.agentsWithProbabilisticBehaviour.end();
     std::set<std::string> slipperyActions;
-    printer.printInitStruct(os, agentName);
+  printer.printInitStruct(os, agentName, keys);
     if(agentWithProbabilisticBehaviour) printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
     else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView);
     for(auto const& c : slipperyNorth) {

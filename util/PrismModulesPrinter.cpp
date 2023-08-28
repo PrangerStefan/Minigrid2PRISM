@@ -253,7 +253,7 @@ namespace prism {
 
   std::ostream& PrismModulesPrinter::printBooleansForKeys(std::ostream &os, const AgentName &agentName, const cells &keys) {
     for(auto const& key : keys) {
-      os << "\t" << agentName << "_has_"<< key.getColor() << "_key : bool init false;\n";
+      os << "\t" << agentName << "_has_"<< key.getColor() << "_key : bool;\n";//init false;\n";
     }
     os << "\n";
     return os;
@@ -292,7 +292,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentName &agentName) {
+  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys) {
     os << "init\n";
     os << "\t(!AgentIsInGoal & !AgentIsInLava & !AgentDone & !AgentIsOnWall)";
     if(enforceOneWays) {
@@ -300,8 +300,14 @@ namespace prism {
     } else {
       os << " & ( !AgentIsOnSlippery ) ";
     }
+
+    for (auto const& key : keys) {
+      os << " & ( !" << agentName << "_has_" << key.getColor() << "_key )";
+    }
+
     os << "\nendinit\n\n";
 
+  
     return os;
   }
 
