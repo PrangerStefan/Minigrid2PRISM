@@ -1,6 +1,7 @@
 #include "util/OptionParser.h"
 #include "util/MinigridGrammar.h"
 #include "util/Grid.h"
+#include "util/ConfigGrammar.h"
 
 #include <iostream>
 #include <fstream>
@@ -54,6 +55,9 @@ int main(int argc, char* argv[]) {
 
   auto enforceOneWays = optionParser.add<popl::Switch>("f", "force-oneways", "Enforce encoding of oneways. This entails that slippery tiles do not allow turning and have prob 1 to shift the agent by one and makes turning impossible if in a one tile wide section of the grid.");
 
+  auto configFilename = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("c", "config-file", "Filename of the predicate configuration file.");
+
+
   try {
     optionParser.parse(argc, argv);
 
@@ -100,7 +104,7 @@ int main(int argc, char* argv[]) {
 
   std::fstream file {outputFilename->value(0), file.trunc | file.out};
   std::fstream infile {inputFilename->value(0), infile.in};
-  std::string line, content, background, rewards;
+  std::string line, content, background, rewards, config;
   std::cout << "\n";
   bool parsingBackground = false;
   bool parsingStateRewards = false;
@@ -126,6 +130,14 @@ int main(int argc, char* argv[]) {
   std::cout << "\n";
 
 
+  if (configFilename->is_set()) {
+    std::fstream configFile {configFilename->value(0), configFile.in};
+    while (std::getline(configFile, line) && !line.empty()) {
+      std::cout << "Configuration   :\t" << line << "\n";
+      config += line + "\n";
+    }
+  }
+
   pos_iterator_t contentFirst(content.begin());
   pos_iterator_t contentIter = contentFirst;
   pos_iterator_t contentLast(content.end());
@@ -134,15 +146,28 @@ int main(int argc, char* argv[]) {
   pos_iterator_t backgroundIter = backgroundFirst;
   pos_iterator_t backgroundLast(background.end());
   MinigridParser<pos_iterator_t> backgroundParser(backgroundFirst);
+  pos_iterator_t configFirst(config.begin());
+  pos_iterator_t configIter = configFirst;
+  pos_iterator_t configLast(config.end());
+  ConfigParser<pos_iterator_t> configParser(configFirst);
 
   cells contentCells;
   cells backgroundCells;
+  std::vector<Configuration> configurations;
   std::map<coordinates, float> stateRewards;
   try {
     bool ok = phrase_parse(contentIter, contentLast, contentParser, qi::space, contentCells);
     // TODO if(background is not empty) {
     ok     &= phrase_parse(backgroundIter, backgroundLast, backgroundParser, qi::space, backgroundCells);
     // TODO }
+    if (configFilename->is_set()) {
+      ok &= phrase_parse(configIter, configLast, configParser, qi::space, configurations);
+    }
+
+    std::cout << "Found " << configurations.size() << "configs" << std::endl;
+    for (auto& config : configurations) {
+      std::cout << config << std::endl;
+    }
 
     boost::escaped_list_separator<char> seps('\\', ';', '\n');
     Tokenizer csvParser(rewards, seps);

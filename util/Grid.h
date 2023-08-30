@@ -25,6 +25,7 @@ class Grid {
     bool isBlocked(coordinates p);
     bool isWall(coordinates p);
     bool isLockedDoor(coordinates p);
+    bool isUnlockedDoor(coordinates p);
     bool isKey(coordinates p);
     bool isBox(coordinates p);
     void printToPrism(std::ostream &os, const prism::ModelType& modelType);
@@ -51,6 +52,7 @@ class Grid {
     cells slipperySouth;
     cells slipperyWest;
     cells lockedDoors;
+    cells unlockedDoors;
     cells boxes;
     cells lava;
 

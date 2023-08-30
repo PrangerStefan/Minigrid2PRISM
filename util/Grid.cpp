@@ -31,6 +31,9 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(lockedDoors), [](cell c) {
       return c.type == Type::LockedDoor;
   });
+  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(unlockedDoors), [](cell c) {
+    return c.type == Type::Door;
+  });
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(goals), [](cell c) {
       return c.type == Type::Goal;
   });
@@ -105,6 +108,13 @@ bool Grid::isLockedDoor(coordinates p) {
       }) != lockedDoors.end();
 }
 
+bool Grid::isUnlockedDoor(coordinates p) {
+  return std::find_if(unlockedDoors.begin(), unlockedDoors.end(),
+      [p](cell cell) {
+        return cell.row == p.first && cell.column == p.second;
+      }) != unlockedDoors.end();
+}
+
 bool Grid::isKey(coordinates p) {
   return std::find_if(keys.begin(), keys.end(),
       [p](cell cell) {
@@ -132,6 +142,7 @@ void Grid::printToPrism(std::ostream& os, const prism::ModelType& modelType) {
   walkable.insert(walkable.end(), lava.begin(), lava.end());
   walkable.insert(walkable.end(), keys.begin(), keys.end());
   walkable.insert(walkable.end(), lockedDoors.begin(), lockedDoors.end());
+  walkable.insert(walkable.end(), unlockedDoors.begin(), unlockedDoors.end());
 
   for(auto const& c : walkable) {
     if(isBlocked(c.getNorth())) northRestriction.push_back(c);

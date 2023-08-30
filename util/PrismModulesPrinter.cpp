@@ -608,10 +608,12 @@ namespace prism {
       os << "endrewards\n";
     }
 
-    os << "rewards \"SafetyNoBFSAndGoal\"\n";
-    if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone:  100;\n";
-    if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
-    os << "endrewards\n";
+    if (!goals.empty() || !lava.empty())  {
+      os << "rewards \"SafetyNoBFSAndGoal\"\n";
+      if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone:  100;\n";
+      if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
+      os << "endrewards\n";
+    }
 
     os << "rewards \"Time\"\n";
     os << "\t!AgentIsInGoal : -1;\n";
