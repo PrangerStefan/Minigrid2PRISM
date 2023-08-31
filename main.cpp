@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
   if (configFilename->is_set()) {
     std::fstream configFile {configFilename->value(0), configFile.in};
     while (std::getline(configFile, line) && !line.empty()) {
-      std::cout << "Configuration   :\t" << line << "\n";
+      std::cout << "Configuration:\t" << line << "\n";
       config += line + "\n";
     }
   }
@@ -164,7 +164,6 @@ int main(int argc, char* argv[]) {
       ok &= phrase_parse(configIter, configLast, configParser, qi::space, configurations);
     }
 
-    std::cout << "Found " << configurations.size() << "configs" << std::endl;
     for (auto& config : configurations) {
       std::cout << config << std::endl;
     }
@@ -180,7 +179,7 @@ int main(int argc, char* argv[]) {
     if(ok) {
       Grid grid(contentCells, backgroundCells, gridOptions, stateRewards);
       //grid.printToPrism(std::cout, prism::ModelType::MDP);
-      grid.printToPrism(file, prism::ModelType::MDP);
+      grid.printToPrism(file, configurations ,prism::ModelType::MDP);
     }
   } catch(qi::expectation_failure<pos_iterator_t> const& e) {
     std::cout << "expected: "; print_info(e.what_);

@@ -218,6 +218,27 @@ namespace prism {
     return os;
   }
 
+  std::ostream& PrismModulesPrinter::printConfiguration(std::ostream& os, const std::vector<Configuration>& configurations) {
+    os << "\n// Configuration\n";
+    
+    for (auto& configuration : configurations) {
+      if (configuration.type_ == ConfigType::Label) {
+        os << "label \"" << configuration.derivation_ << "\" = ";
+      }
+      else if (configuration.type_ == ConfigType::Formula) {
+        os << "formula " << configuration.derivation_ << " = ";
+      }
+
+      for (auto& expr : configuration.expressions_) {
+        os << expr;
+      }
+      
+      os << ";\n";
+    }
+
+    return os;
+  }
+
   std::ostream& PrismModulesPrinter::printAvoidanceLabel(std::ostream &os, const std::vector<AgentName> agentNames, const int &distance) {
     os << "label avoidance = ";
     bool first = true;

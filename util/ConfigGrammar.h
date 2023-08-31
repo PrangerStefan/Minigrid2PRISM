@@ -17,30 +17,37 @@ namespace phoenix = boost::phoenix;
 
 typedef std::vector<std::string> expressions;
 
+enum class ConfigType : char {
+  Label = 'L',
+  Formula = 'F',
+};
+
 struct Configuration
 {
   expressions expressions_;
   std::string derivation_;
+  ConfigType type_ {ConfigType::Label};
 
   Configuration() = default;
-  Configuration(expressions expressions, std::string derivation) : expressions_(expressions), derivation_(derivation) {}
+  Configuration(expressions expressions, std::string derivation, ConfigType type) : expressions_(expressions), derivation_(derivation), type_(type) {}
   ~Configuration() = default;
   Configuration(const Configuration&) = default;
 
   friend std::ostream& operator << (std::ostream& os, const Configuration& config) {
-    os << "Configuration" << std::endl; 
+    os << "Configuration with Type: " << static_cast<char>(config.type_) << std::endl; 
 
     for (auto& expression : config.expressions_) {
-      os << "Expression=" << expression << std::endl;
+      os << "\tExpression=" << expression << std::endl;
     }
 
-    return os << "Derviation=" << config.derivation_;
+    return os << "\tDerviation=" << config.derivation_;
   }
 };
 
 
 BOOST_FUSION_ADAPT_STRUCT(
     Configuration,
+    (ConfigType, type_)
     (expressions, expressions_)
     (std::string, derivation_)
 )
@@ -52,18 +59,27 @@ template <typename It>
   ConfigParser(It first) : ConfigParser::base_type(config_)
   {
     using namespace qi;
-   
-    expression_ = +char_("a-zA-Z_0-9");
+   //F:(AgentCannotMoveSouth & AgentCannotMoveNorth)  | (AgentCannotMoveEast & AgentCannotMoveWest) ;AgentCannotTurn
+    configType_.add
+      ("L", ConfigType::Label)
+      ("F", ConfigType::Formula);
+
+    expression_ = -qi::char_('!') > + char_("a-zA-Z_0-9");
     expressions_ = (expression_ % ',');
-    row_ = (expressions_ > ';' > expression_);
+    row_ = (configType_ > ':' > expressions_ > ';' > expression_);
+    // row_ = (expressions_ > ';' > expression_);
     config_ = (row_ % "\n");
 
+    BOOST_SPIRIT_DEBUG_NODE(configType_);
     BOOST_SPIRIT_DEBUG_NODE(expression_);
     BOOST_SPIRIT_DEBUG_NODE(expressions_);
     BOOST_SPIRIT_DEBUG_NODE(config_);
   }
 
   private:
+
+    qi::symbols<char, ConfigType>  configType_;
+
   
     qi::rule<It, expressions()> expressions_;
     qi::rule<It, std::string()> expression_;

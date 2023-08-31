@@ -129,7 +129,7 @@ bool Grid::isBox(coordinates p) {
       }) != boxes.end();
 }
 
-void Grid::printToPrism(std::ostream& os, const prism::ModelType& modelType) {
+void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration ,const prism::ModelType& modelType) {
   cells northRestriction;
   cells eastRestriction;
   cells southRestriction;
@@ -225,6 +225,10 @@ void Grid::printToPrism(std::ostream& os, const prism::ModelType& modelType) {
     //if(!stateRewards.empty()) {
     printer.printRewards(os, agentName, stateRewards, lava, goals, backgroundTiles);
     //}
+
+    if (!configuration.empty()) {
+      printer.printConfiguration(os, configuration);
+    }
   }
 }
 

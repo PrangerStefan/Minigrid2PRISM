@@ -7,6 +7,7 @@
 
 #include "MinigridGrammar.h"
 #include "PrismModulesPrinter.h"
+#include "ConfigGrammar.h"
 
 struct GridOptions {
   std::vector<AgentName> agentsToBeConsidered;
@@ -28,7 +29,7 @@ class Grid {
     bool isUnlockedDoor(coordinates p);
     bool isKey(coordinates p);
     bool isBox(coordinates p);
-    void printToPrism(std::ostream &os, const prism::ModelType& modelType);
+    void printToPrism(std::ostream &os, std::vector<Configuration>& configuration, const prism::ModelType& modelType);
 
     std::array<bool, 8> getWalkableDirOf8Neighborhood(cell c);
 

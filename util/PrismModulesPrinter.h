@@ -3,6 +3,7 @@
 #include <iostream>
 #include <functional>
 #include "MinigridGrammar.h"
+#include "ConfigGrammar.h"
 #include "PrismPrinter.h"
 
 namespace prism {
@@ -75,6 +76,8 @@ namespace prism {
       std::ostream& printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer);
 
       std::ostream& printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
+
+      std::ostream& printConfiguration(std::ostream &os, const std::vector<Configuration>& configurations);
 
       std::string moveGuard(const size_t &agentIndex);
       std::string moveUpdate(const size_t &agentIndex);
