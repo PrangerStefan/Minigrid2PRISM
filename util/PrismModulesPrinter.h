@@ -3,8 +3,8 @@
 #include <iostream>
 #include <functional>
 #include "MinigridGrammar.h"
-#include "ConfigGrammar.h"
 #include "PrismPrinter.h"
+#include "ConfigYaml.h"
 
 namespace prism {
   class PrismModulesPrinter {

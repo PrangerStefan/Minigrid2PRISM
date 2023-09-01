@@ -14,9 +14,11 @@ project(
   VERSION 0.1
   LANGUAGES CXX)
 
+find_package(yaml-cpp)
+
 add_executable(main
                ${SRCS}
                main.cpp
                )
 
-target_link_libraries(main pthread)
+target_link_libraries(main pthread yaml-cpp)

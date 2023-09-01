@@ -5,4 +5,5 @@ list(APPEND SRCS
   ${CMAKE_CURRENT_LIST_DIR}/PrismModulesPrinter.cpp
   ${CMAKE_CURRENT_LIST_DIR}/popl.hpp
   ${CMAKE_CURRENT_LIST_DIR}/OptionParser.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/ConfigYaml.cpp
 )

@@ -7,7 +7,7 @@
 
 #include "MinigridGrammar.h"
 #include "PrismModulesPrinter.h"
-#include "ConfigGrammar.h"
+#include "ConfigYaml.h"
 
 struct GridOptions {
   std::vector<AgentName> agentsToBeConsidered;
