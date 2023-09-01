@@ -169,7 +169,12 @@ int main(int argc, char* argv[]) {
     if(ok) {
       Grid grid(contentCells, backgroundCells, gridOptions, stateRewards);
       //grid.printToPrism(std::cout, prism::ModelType::MDP);
-      grid.printToPrism(file, configurations ,prism::ModelType::MDP);
+      std::stringstream ss;
+      // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
+      grid.printToPrism(ss, configurations ,prism::ModelType::MDP);
+      std::string str = ss.str();
+      grid.applyOverwrites(str, configurations);
+      file << str;
     }
   } catch(qi::expectation_failure<pos_iterator_t> const& e) {
     std::cout << "expected: "; print_info(e.what_);

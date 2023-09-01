@@ -5,7 +5,6 @@
 
 #include "yaml-cpp/yaml.h"
 
-typedef std::string expressions;
 
 enum class ConfigType : char {
   Label = 'L',
@@ -15,20 +14,25 @@ enum class ConfigType : char {
 
 struct Configuration
 {
-  expressions expressions_;
-  std::string derivation_;
+  std::string module_ {};
+  std::string expression_{};
+  std::string identifier_{};
   ConfigType type_ {ConfigType::Label};
-  bool overwrite_;
+  bool overwrite_ {false};
 
   Configuration() = default;
-  Configuration(std::string expression, std::string derivation, ConfigType type, bool overwrite = false) : expressions_(expression), derivation_(derivation), type_(type), overwrite_(overwrite) {}
+  Configuration(std::string expression
+                , std::string identifier
+                , ConfigType type
+                , bool overwrite = false
+                , std::string module = "") : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module} {}
+  
   ~Configuration() = default;
   Configuration(const Configuration&) = default;
 
   friend std::ostream& operator << (std::ostream& os, const Configuration& config) {
     os << "Configuration with Type: " << static_cast<char>(config.type_) << std::endl; 
-    os << "\tExpression=" << config.expressions_ << std::endl;
-    return os << "\tDerviation=" << config.derivation_;
+    return os << "\tExpression=" << config.expression_ << std::endl;
   }
 };
 
@@ -40,7 +44,9 @@ struct Label {
   public:
   std::string text_;
   std::string label_;
-  bool overwrite_;
+  bool overwrite_{false};
+
+  std::string createExpression() const;
 
   friend std::ostream& operator <<(std::ostream &os, const Label& label);
 };
@@ -51,7 +57,9 @@ struct Formula {
   public:
   std::string formula_;
   std::string content_;
-  bool overwrite_;
+  bool overwrite_ {false};
+
+  std::string createExpression() const;
 
   friend std::ostream& operator << (std::ostream &os, const Formula& formula);
 };
@@ -61,7 +69,9 @@ struct Action {
   std::string action_;
   std::string guard_;
   std::string update_;
-  bool overwrite_;
+  bool overwrite_ {false};
+
+  std::string createExpression() const;
 
   friend std::ostream& operator << (std::ostream& os, const Action& action);
 };

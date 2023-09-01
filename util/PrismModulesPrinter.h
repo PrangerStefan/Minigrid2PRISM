@@ -9,7 +9,7 @@
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, const bool enforceOneWays = false);
+      PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, std::vector<Configuration> config ,const bool enforceOneWays = false);
 
       std::ostream& printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &cells);
       std::ostream& printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest);
@@ -78,6 +78,7 @@ namespace prism {
       std::ostream& printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
 
       std::ostream& printConfiguration(std::ostream &os, const std::vector<Configuration>& configurations);
+      std::ostream& printConfiguredActions(std::ostream &os, const AgentName &agentName);
 
       std::string moveGuard(const size_t &agentIndex);
       std::string moveUpdate(const size_t &agentIndex);
@@ -90,5 +91,6 @@ namespace prism {
       ModelType const& modelType;
       const size_t numberOfPlayer;
       bool enforceOneWays;
+      std::vector<Configuration> configuration;
   };
 }

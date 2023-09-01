@@ -24,6 +24,30 @@ std::ostream& operator << (std::ostream& os, const Module& module) {
     return os;
 }
 
+std::string Label::createExpression() const {
+    if (overwrite_) {
+        return "label \"" + label_ + "\" = " + text_ + "; // Overwrite";
+    } 
+
+    return "label \"" + label_ + "\" = " + text_ + ";";
+}
+
+std::string Formula::createExpression() const {
+    if (overwrite_) {
+        return "formula " + formula_ + " = " + content_ + "; // Overwrite";
+    }
+
+    return "formula " + formula_ + " = " + content_ + ";";
+}
+
+std::string Action::createExpression() const {
+    if (overwrite_) {
+        return action_  + "\t" + guard_ + "-> " + update_ + "; // Overwrite";
+    }
+    
+    return "\t" + action_  + "\t" + guard_ + "-> " + update_ + ";";
+}
+
 YAML::Node YAML::convert<Module>::encode(const Module& rhs) {
     YAML::Node node;
     
@@ -122,28 +146,30 @@ bool YAML::convert<Formula>::decode(const YAML::Node& node, Formula& rhs) {
         std::vector<Configuration> configuration;
 
         try {
-        YAML::Node config = YAML::LoadFile(file_);  
+            YAML::Node config = YAML::LoadFile(file_);  
 
-        const std::vector<Label> labels = config["labels"].as<std::vector<Label>>();
-        const std::vector<Formula> formulas = config["formulas"].as<std::vector<Formula>>();
-        const std::vector<Module> modules = config["modules"].as<std::vector<Module>>();
+            const std::vector<Label> labels = config["labels"].as<std::vector<Label>>();
+            const std::vector<Formula> formulas = config["formulas"].as<std::vector<Formula>>();
+            const std::vector<Module> modules = config["modules"].as<std::vector<Module>>();
 
-        for (auto& label : labels) {
-            configuration.push_back({label.text_, label.label_, ConfigType::Label, label.overwrite_});
-        }
-        for (auto& formula : formulas) {
-            configuration.push_back({formula.content_, formula.formula_ , ConfigType::Formula, formula.overwrite_});
-        }
-        for (auto& module : modules) {
-            std::cout << module << std::endl;
-        }
+            for (auto& label : labels) {
+                configuration.push_back({label.createExpression(), label.label_ , ConfigType::Label, label.overwrite_});
+            }
+            for (auto& formula : formulas) {
+                configuration.push_back({formula.createExpression(), formula.formula_ ,ConfigType::Formula, formula.overwrite_});
+            }
+            for (auto& module : modules) {
+                for (auto& action : module.actions_) {
+                    configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_});
+                }
+            }
 
 
         }
         catch(const std::exception& e) {
-        std::cout << "Exception '" << typeid(e).name() << "' caught:" << std::endl;
-        std::cout << "\t" << e.what() << std::endl;
-        std::cout << "while parsing configuration " << file_ << std::endl;
+            std::cout << "Exception '" << typeid(e).name() << "' caught:" << std::endl;
+            std::cout << "\t" << e.what() << std::endl;
+            std::cout << "while parsing configuration " << file_ << std::endl;
         }
 
         return configuration;

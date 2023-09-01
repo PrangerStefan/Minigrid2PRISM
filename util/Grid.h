@@ -30,6 +30,7 @@ class Grid {
     bool isKey(coordinates p);
     bool isBox(coordinates p);
     void printToPrism(std::ostream &os, std::vector<Configuration>& configuration, const prism::ModelType& modelType);
+    void applyOverwrites(std::string& str, std::vector<Configuration>& configuration);
 
     std::array<bool, 8> getWalkableDirOf8Neighborhood(cell c);
 

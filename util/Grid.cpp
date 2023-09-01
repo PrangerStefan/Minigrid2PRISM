@@ -129,6 +129,30 @@ bool Grid::isBox(coordinates p) {
       }) != boxes.end();
 }
 
+void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configuration) {
+  for (auto& config : configuration) {
+    if (!config.overwrite_) {
+      continue;
+    }
+      std::cout << "Searching for " << config.identifier_ << std::endl;
+      size_t start_pos;
+      
+      if (config.type_ == ConfigType::Formula) {
+        start_pos = str.find("formula " + config.identifier_);
+      } else if (config.type_ == ConfigType::Label) {
+        start_pos = str.find("label " + config.identifier_);
+      } else if (config.type_ == ConfigType::Module) {
+        start_pos = str.find(config.identifier_);
+      }
+
+      size_t end_pos = str.find(';', start_pos) + 1;
+
+      std::string expression = config.expression_;
+    
+      str.replace(start_pos, end_pos - start_pos , expression);
+  }
+}
+
 void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration ,const prism::ModelType& modelType) {
   cells northRestriction;
   cells eastRestriction;
@@ -151,7 +175,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     if(isBlocked(c.getWest()))   westRestriction.push_back(c);
   }
 
-  prism::PrismModulesPrinter printer(modelType, agentNameAndPositionMap.size(), gridOptions.enforceOneWays);
+  prism::PrismModulesPrinter printer(modelType, agentNameAndPositionMap.size(), configuration, gridOptions.enforceOneWays);
   printer.printModel(os, modelType);
   if(modelType == prism::ModelType::SMG) {
     printer.printGlobalMoveVariable(os, agentNameAndPositionMap.size());

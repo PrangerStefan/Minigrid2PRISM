@@ -5,8 +5,8 @@
 
 namespace prism {
 
-  PrismModulesPrinter::PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, const bool enforceOneWays)
-    : modelType(modelType), numberOfPlayer(numberOfPlayer), enforceOneWays(enforceOneWays) {
+  PrismModulesPrinter::PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, std::vector<Configuration> config, const bool enforceOneWays)
+    : modelType(modelType), numberOfPlayer(numberOfPlayer), enforceOneWays(enforceOneWays), configuration(config) {
   }
 
   std::ostream& PrismModulesPrinter::printModel(std::ostream &os, const ModelType &modelType) {
@@ -222,18 +222,12 @@ namespace prism {
     os << "\n// Configuration\n";
     
     for (auto& configuration : configurations) {
-      if (configuration.type_ == ConfigType::Label) {
-        os << "label \"" << configuration.derivation_ << "\" = ";
-      }
-      else if (configuration.type_ == ConfigType::Formula) {
-        os << "formula " << configuration.derivation_ << " = ";
-      }
-
-      for (auto& expr : configuration.expressions_) {
-        os << expr;
+      std::cout << configuration.overwrite_ << std::endl;
+      if (configuration.overwrite_ || configuration.type_ == ConfigType::Module) {
+        continue;
       }
       
-      os << ";\n";
+      os << configuration.expression_ << std::endl;
     }
 
     return os;
@@ -362,7 +356,25 @@ namespace prism {
       printMovementActions(os, agentName, agentIndex, agentWithView, probability);
     }
     printDoneActions(os, agentName, agentIndex);
+
+    printConfiguredActions(os, agentName);
+
     os << "\n";
+    return os;
+  }
+
+  std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
+    os << "\t//Configuration \n";
+
+
+    for (auto& config : configuration) {
+      if (config.type_ == ConfigType::Module && !config.overwrite_ && agentName == config.module_) {
+        os << config.expression_ ;
+      }
+    }
+
+    os << "\n";
+
     return os;
   }
 
