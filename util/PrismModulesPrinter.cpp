@@ -222,7 +222,6 @@ namespace prism {
     os << "\n// Configuration\n";
     
     for (auto& configuration : configurations) {
-      std::cout << configuration.overwrite_ << std::endl;
       if (configuration.overwrite_ || configuration.type_ == ConfigType::Module) {
         continue;
       }

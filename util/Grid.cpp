@@ -134,7 +134,6 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
     if (!config.overwrite_) {
       continue;
     }
-      std::cout << "Searching for " << config.identifier_ << std::endl;
       size_t start_pos;
       
       if (config.type_ == ConfigType::Formula) {

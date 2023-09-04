@@ -120,10 +120,10 @@ int main(int argc, char* argv[]) {
       continue;
     }
     if(!parsingBackground && !parsingStateRewards) {
-      std::cout << "Reading   :\t" << line << "\n";
+      // std::cout << "Reading   :\t" << line << "\n";
       content += line + "\n";
     } else if (parsingBackground) {
-      std::cout << "Background:\t" << line << "\n";
+      // std::cout << "Background:\t" << line << "\n";
       background += line + "\n";
     } else if(parsingStateRewards) {
       rewards += line + "\n";
@@ -152,10 +152,6 @@ int main(int argc, char* argv[]) {
     if (configFilename->is_set()) {
       YamlConfigParser parser(configFilename->value(0));  
       configurations = parser.parseConfiguration();
-    }
-
-    for (auto& config : configurations) {
-      std::cout << config << std::endl;
     }
 
     boost::escaped_list_separator<char> seps('\\', ';', '\n');
