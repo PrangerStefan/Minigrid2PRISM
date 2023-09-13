@@ -219,7 +219,6 @@ namespace prism {
   }
 
   std::ostream& PrismModulesPrinter::printConfiguration(std::ostream& os, const std::vector<Configuration>& configurations) {
-    os << "\n// Configuration\n";
     
     for (auto& configuration : configurations) {
       if (configuration.overwrite_ || configuration.type_ == ConfigType::Module) {
@@ -363,9 +362,6 @@ namespace prism {
   }
 
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
-    os << "\t//Configuration \n";
-
-
     for (auto& config : configuration) {
       if (config.type_ == ConfigType::Module && !config.overwrite_ && agentName == config.module_) {
         os << config.expression_ ;
@@ -433,10 +429,11 @@ namespace prism {
     // view transition appdx in form (guard, update part)
     // IMPORTANT: No mod() usage for turn left due to bug in mod() function for decrement
 
-    std::array<std::pair<std::string, std::string>, 3> viewTransition = {
-        /* turn to right */ std::make_pair(" & " + agentName + "SlipperyTurnRightAllowed ",                           " & (view" + agentName + "'=mod(view" + agentName + " + 1, 4))"),
-        /* turn to left  */ std::make_pair(" & " + agentName + "SlipperyTurnLeftAllowed & view" + agentName + ">0", " & (view" + agentName + "'=view" + agentName + " - 1)"),
-        /* turn to left  */ std::make_pair(" & " + agentName + "SlipperyTurnLeftAllowed & view" + agentName + "=0", " & (view" + agentName + "'=3)")
+
+    std::array<std::tuple<std::string, std::string, std::string>, 3> viewTransition = {
+        std::make_tuple(" & " + agentName + "SlipperyTurnRightAllowed ", " & (view" + agentName + "'=mod(view" + agentName + " + 1, 4))", "_right]"),
+        std::make_tuple(" & " + agentName + "SlipperyTurnLeftAllowed & view" + agentName + ">0", " & (view" + agentName + "'=view" + agentName + " - 1)", "_left]"),
+        std::make_tuple(" & " + agentName + "SlipperyTurnLeftAllowed & view" + agentName + "=0", " & (view" + agentName + "'=3)", "_left]")
     };
 
     // direction specifics
@@ -448,22 +445,22 @@ namespace prism {
     switch (orientation)
     {
       case SlipperyType::North:
-        actionName = "\t[" + agentName + "turn_at_slip_north]";
+        actionName = "\t[" + agentName + "turn_at_slip_north";
         prob_piece_dir = { 0, 0, 0, 1, 1, 1, 0, 0, 0 /* <- R */ };
         break;
 
       case SlipperyType::South:
-        actionName = "\t[" + agentName + "turn_at_slip_south]";
+        actionName = "\t[" + agentName + "turn_at_slip_south";
         prob_piece_dir = { 1, 1, 0, 0, 0, 0, 0, 1, 0 /* <- R */ };
         break;
 
       case SlipperyType::East:
-        actionName = "\t[" + agentName + "turn_at_slip_east]";
+        actionName = "\t[" + agentName + "turn_at_slip_east";
         prob_piece_dir = { 0, 0, 0, 0, 0, 1, 1, 1, 0 /* <- R */ };
         break;
 
       case SlipperyType::West:
-        actionName = "\t[" + agentName + "turn_at_slip_west]";
+        actionName = "\t[" + agentName + "turn_at_slip_west";
         prob_piece_dir = { 0, 1, 1, 1, 0, 0, 0, 0, 0 /* <- R */ };
         break;
     }
@@ -492,9 +489,9 @@ namespace prism {
     // generic output (for every view transition)
     for (std::size_t v = 0; v < viewTransition.size(); v++) {
 
-        os << actionName << moveGuard(agentIndex) << " x" << agentName << "=" << c.second << " & y" << agentName << "=" << c.first << viewTransition.at(v).first;
+        os << actionName << std::get<2>(viewTransition.at(v)) << moveGuard(agentIndex) << " x" << agentName << "=" << c.second << " & y" << agentName << "=" << c.first << std::get<0>(viewTransition.at(v));
         for (std::size_t i = 0; i < ALL_POSS_DIRECTIONS; i++) {
-          os << (i == 0 ? " -> " : " + ") << prob_piece_dir.at(i) << "/" << PROB_PIECES << " : " << positionTransition.at(i) << viewTransition.at(v).second << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
+          os << (i == 0 ? " -> " : " + ") << prob_piece_dir.at(i) << "/" << PROB_PIECES << " : " << positionTransition.at(i) << std::get<1>(viewTransition.at(v)) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
         }
     }
 
