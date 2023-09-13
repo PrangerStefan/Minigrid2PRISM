@@ -14,6 +14,9 @@ enum class ConfigType : char {
 
 struct Configuration
 {
+  static const std::string overwrite_identifier_; 
+  static const std::string configuration_identifier_; 
+
   std::string module_ {};
   std::string expression_{};
   std::string identifier_{};

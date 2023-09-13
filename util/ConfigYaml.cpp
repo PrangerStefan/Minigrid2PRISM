@@ -26,26 +26,26 @@ std::ostream& operator << (std::ostream& os, const Module& module) {
 
 std::string Label::createExpression() const {
     if (overwrite_) {
-        return "label \"" + label_ + "\" = " + text_ + "; // Overwrite";
+        return "label \"" + label_ + "\" = " + text_ + Configuration::overwrite_identifier_;
     } 
 
-    return "label \"" + label_ + "\" = " + text_ + ";";
+    return "label \"" + label_ + "\" = " + text_ + Configuration::configuration_identifier_;
 }
 
 std::string Formula::createExpression() const {
     if (overwrite_) {
-        return "formula " + formula_ + " = " + content_ + "; // Overwrite";
+        return "formula " + formula_ + " = " + content_ + Configuration::overwrite_identifier_;
     }
 
-    return "formula " + formula_ + " = " + content_ + ";";
+    return "formula " + formula_ + " = " + content_ + Configuration::configuration_identifier_;
 }
 
 std::string Action::createExpression() const {
     if (overwrite_) {
-        return action_  + "\t" + guard_ + "-> " + update_ + "; // Overwrite";
+        return action_  + "\t" + guard_ + "-> " + update_  + Configuration::overwrite_identifier_;
     }
     
-    return "\t" + action_  + "\t" + guard_ + "-> " + update_ + ";";
+    return "\t" + action_  + "\t" + guard_ + "-> " + update_+ Configuration::configuration_identifier_;
 }
 
 YAML::Node YAML::convert<Module>::encode(const Module& rhs) {
@@ -141,6 +141,9 @@ bool YAML::convert<Formula>::decode(const YAML::Node& node, Formula& rhs) {
 
     return true;
 }
+
+const std::string Configuration::configuration_identifier_ { "; // created through configuration"};
+const std::string Configuration::overwrite_identifier_{"; // Overwritten through configuration"};
 
  std::vector<Configuration> YamlConfigParser::parseConfiguration() {
         std::vector<Configuration> configuration;
