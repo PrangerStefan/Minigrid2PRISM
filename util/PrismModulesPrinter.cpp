@@ -46,9 +46,40 @@ namespace prism {
       else os << " | ";
       os << "(x" << agentName << "=" << cell.column << "&y" << agentName << "=" << cell.row << ")";
     }
+    os << " | " << agentName << "CannotMove" << direction << "BecauseOfKey";
     os << ";\n";
     return os;
   }
+  
+  std::ostream& PrismModulesPrinter::printKeyRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &keys) {
+    bool first = true;
+    os << "formula " << agentName << "CannotMove" << direction << "BecauseOfKey" << " = ";
+    for (auto const& key : keys) {
+      if(first) first = false;
+      else os << " | ";
+      os << "((!" << agentName << "_has_" << key.getColor() << "_key) & ";
+
+      coordinates coords;
+
+      if (direction == "North") {
+        coords = key.getSouth();
+      } else if (direction == "South") {
+        coords = key.getNorth();
+      } else if (direction == "East") {
+        coords = key.getWest();
+      } else if (direction == "West") {
+        coords = key.getEast();
+      } else {
+        *((size_t*)0);
+      }
+
+      os << "(x" << agentName << "=" << coords.first << "&y" << agentName << "=" << coords.second << "))";
+    }
+    os << ";\n";
+    return os;
+  }
+
+
 
   std::ostream& PrismModulesPrinter::printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest) {
     if(std::find_if(slipperyCollection.cbegin(), slipperyCollection.cend(), [=](const std::reference_wrapper<cells>& c) { return !c.get().empty(); }) == slipperyCollection.cend()) {
@@ -174,11 +205,20 @@ namespace prism {
                               const cells &slipperyNorth,
                               const cells &slipperyEast,
                               const cells &slipperySouth,
-                              const cells &slipperyWest) {
+                              const cells &slipperyWest,
+                              const cells &keys) {
     printRestrictionFormula(os, agentName, "North", restrictionNorth);
     printRestrictionFormula(os, agentName, "East ", restrictionEast);
     printRestrictionFormula(os, agentName, "South", restrictionSouth);
-    printRestrictionFormula(os, agentName, "West ", restrictionWest);
+    printRestrictionFormula(os, agentName, "West", restrictionWest);
+    
+    if (!keys.empty()) {
+      printKeyRestrictionFormula(os, agentName, "North", keys);
+      printKeyRestrictionFormula(os, agentName, "East", keys);
+      printKeyRestrictionFormula(os, agentName, "South", keys);
+      printKeyRestrictionFormula(os, agentName, "West", keys);
+    }
+    
     printIsOnSlipperyFormula(os, agentName, slipperyCollection, slipperyNorth, slipperyEast, slipperySouth, slipperyWest);
     printIsInLavaFormula(os, agentName, lava);
     printWallFormula(os, agentName, walls);
@@ -249,9 +289,9 @@ namespace prism {
     if(keys.size() == 0) return os;
 
     for(auto const& key : keys) {
-      int xKey = key.getCoordinates().first;
-      int yKey = key.getCoordinates().second;
       std::string keyColor = key.getColor();
+      std::string xKey = "xKey" + keyColor;
+      std::string yKey = "yKey" + keyColor;      
       os << "label \"" << agentName << "PickedUp" << keyColor << "Key\" = " << agentName << "_has_" << keyColor << "_key = true;\n";
       os << "formula " << agentName << "CanPickUp" << keyColor << "Key = ";
       os << "((x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << "&view" << agentName << " = 1) |";
@@ -268,6 +308,8 @@ namespace prism {
     for(auto const& key : keys) {
       os << "\t" << agentName << "_has_"<< key.getColor() << "_key : bool;\n";//init false;\n";
     }
+
+
     os << "\n";
     return os;
   }
@@ -284,13 +326,41 @@ namespace prism {
   }
 
   std::ostream& PrismModulesPrinter::printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys) {
-    for(auto const& key : keys) {
+    for(auto const& key : keys) { // TODO ADD Drop action and enforce that pickup only possible if pockets empty (nothing picked up already)
       std::string keyColor = key.getColor();
-      os << "\t[pickup_" << keyColor << "_key] " << agentName << "CanPickUp" << keyColor << "Key -> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=true);";
+      os << "\t[pickup_" << keyColor << "_key] " << pickupGuard(agentName, keyColor) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true)\n";
+     
+      viewVariable(agentName, 3, true);
+      os << "\t[drop_" << keyColor << "_key_north] " << dropGuard(agentName, keyColor, 3) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
+      os << " & (xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "-1);\n"; 
+
+      viewVariable(agentName, 2, true);
+      os << "\t[drop_" << keyColor << "_key_west] " << dropGuard(agentName, keyColor, 2) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
+      os << " & (xKey" << keyColor << "'=x" << agentName << "-1) & (yKey" << keyColor << "'=y" <<agentName << ");\n"; 
+
+      viewVariable(agentName, 1, true);
+      os << "\t[drop_" << keyColor << "_key_south] " << dropGuard(agentName, keyColor, 1) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
+      os << " & (xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "+1);\n"; 
+
+      viewVariable(agentName, 0, true);
+      os << "\t[drop_" << keyColor << "_key_east] " << dropGuard(agentName, keyColor, 0) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
+      os << " & (xKey" << keyColor << "'=x" << agentName << "+1) & (yKey" << keyColor << "'=y" <<agentName << ");\n"; 
     }
     os << "\n";
     return os;
+  }
+
+  std::string PrismModulesPrinter::pickupGuard(const AgentName &agentName, const std::string keyColor ) {
+    return "!" + agentName + "_is_carrying_object &\t" + agentName + "CanPickUp" + keyColor + "Key ";
+  }
+
+  std::string PrismModulesPrinter::dropGuard(const AgentName &agentName, const std::string keyColor, size_t view) {
+    return viewVariable(agentName, view, true) + agentName + "_has_" + keyColor + "_key\t";
   }
 
   std::ostream& PrismModulesPrinter::printActionsForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles) {
@@ -316,7 +386,11 @@ namespace prism {
 
     for (auto const& key : keys) {
       os << " & ( !" << agentName << "_has_" << key.getColor() << "_key )";
+      os << " & ( xKey" << key.getColor() << "="<< key.column << ")";
+      os << " & ( yKey" << key.getColor() << "=" << key.row << ")";
     }
+
+    os << " & ( !" << agentName << "_is_carrying_object" << ")";
 
     os << "\nendinit\n\n";
 
@@ -328,6 +402,8 @@ namespace prism {
     os << "module " << agentName << "\n";
     os << "\tx" << agentName << " : [1.." << boundaries.second  << "];\n";
     os << "\ty" << agentName << " : [1.." << boundaries.first << "];\n";
+    os << "\t" << agentName << "_is_carrying_object : bool;\n";
+
     printBooleansForKeys(os, agentName, keys);
     printBooleansForBackground(os, agentName, backgroundTiles);
     os << "\t" << agentName << "Done : bool;\n";
@@ -360,6 +436,26 @@ namespace prism {
     os << "\n";
     return os;
   }
+
+  std::ostream& PrismModulesPrinter::printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries) {
+    std::string keyIdentifier = "Key" + key.getColor();
+
+    os << "module " << keyIdentifier << "\n";
+
+    os << "\tx" << keyIdentifier << " : [1.." << boundaries.second  << "];\n";
+    os << "\ty" << keyIdentifier << " : [1.." << boundaries.first << "];\n";
+
+    printKeyActions(os, key ,keyIdentifier);
+
+    os << "\n";
+    return os;
+  }
+  
+  std::ostream& PrismModulesPrinter::printKeyActions(std::ostream &os, const cell &key ,const std::string &keyIdentifier) {
+   
+    return os;
+  }
+
 
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
     for (auto& config : configuration) {

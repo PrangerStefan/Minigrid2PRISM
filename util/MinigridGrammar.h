@@ -75,7 +75,8 @@ template <typename It>
       ("P", Color::Purple)
       ("Y", Color::Yellow)
       (" ", Color::None);
-
+  //TODO Enforce keys different color
+  
     cell_ = type_ > color_;
 
     row_ = (cell_ % -qi::char_("\n"));

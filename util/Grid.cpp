@@ -158,16 +158,28 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   cells southRestriction;
   cells westRestriction;
   cells walkable = floor;
+  cells conditionallyWalkable;
+
   walkable.insert(walkable.end(), goals.begin(), goals.end());
   walkable.insert(walkable.end(), boxes.begin(), boxes.end());
   walkable.push_back(agent);
   walkable.insert(walkable.end(), adversaries.begin(), adversaries.end());
   walkable.insert(walkable.end(), lava.begin(), lava.end());
-  walkable.insert(walkable.end(), keys.begin(), keys.end());
-  walkable.insert(walkable.end(), lockedDoors.begin(), lockedDoors.end());
-  walkable.insert(walkable.end(), unlockedDoors.begin(), unlockedDoors.end());
+
+  conditionallyWalkable.insert(conditionallyWalkable.end(), keys.begin(), keys.end());
+  conditionallyWalkable.insert(conditionallyWalkable.end(), lockedDoors.begin(), lockedDoors.end());
+  conditionallyWalkable.insert(conditionallyWalkable.end(), unlockedDoors.begin(), unlockedDoors.end());
 
   for(auto const& c : walkable) {
+    if(isBlocked(c.getNorth())) northRestriction.push_back(c);
+    if(isBlocked(c.getEast()))   eastRestriction.push_back(c);
+    if(isBlocked(c.getSouth())) southRestriction.push_back(c);
+    if(isBlocked(c.getWest()))   westRestriction.push_back(c);
+  }
+  // TODO Add doors here (list of doors keys etc)
+  // walkable.insert(walkable.end(), lockedDoors.begin(), lockedDoors.end());
+  // walkable.insert(walkable.end(), unlockedDoors.begin(), unlockedDoors.end());
+  for(auto const& c : conditionallyWalkable) {
     if(isBlocked(c.getNorth())) northRestriction.push_back(c);
     if(isBlocked(c.getEast()))   eastRestriction.push_back(c);
     if(isBlocked(c.getSouth())) southRestriction.push_back(c);
@@ -199,7 +211,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   }
 
   for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition) {
-    printer.printFormulas(os, agentNameAndPosition->first, northRestriction, eastRestriction, southRestriction, westRestriction, { slipperyNorth, slipperyEast, slipperySouth, slipperyWest }, lava, walls, noTurnFloor, slipperyNorth, slipperyEast, slipperySouth, slipperyWest);
+    printer.printFormulas(os, agentNameAndPosition->first, northRestriction, eastRestriction, southRestriction, westRestriction, { slipperyNorth, slipperyEast, slipperySouth, slipperyWest }, lava, walls, noTurnFloor, slipperyNorth, slipperyEast, slipperySouth, slipperyWest, keys);
     printer.printGoalLabel(os, agentNameAndPosition->first, goals);
     printer.printKeysLabels(os, agentNameAndPosition->first, keys);
   }
@@ -241,6 +253,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     }
 
     printer.printEndmodule(os);
+
     if(modelType == prism::ModelType::SMG) {
       if(agentWithProbabilisticBehaviour) printer.printPlayerStruct(os, agentNameAndPosition->first, agentWithView, gridOptions.probabilitiesForActions, slipperyActions);
       else                                printer.printPlayerStruct(os, agentNameAndPosition->first, agentWithView, {}, slipperyActions);
@@ -253,6 +266,13 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
       printer.printConfiguration(os, configuration);
     }
   }
+
+  for (auto const & key : keys) {
+    os << "\n";
+    printer.printKeyModule(os, key, maxBoundaries);
+    printer.printEndmodule(os);
+  }
+
 }
 
 
