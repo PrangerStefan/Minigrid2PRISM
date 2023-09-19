@@ -6,7 +6,7 @@
 namespace prism {
 
   PrismModulesPrinter::PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, std::vector<Configuration> config, const bool enforceOneWays)
-    : modelType(modelType), numberOfPlayer(numberOfPlayer), enforceOneWays(enforceOneWays), configuration(config) {
+    : modelType(modelType), numberOfPlayer(numberOfPlayer), enforceOneWays(enforceOneWays), configuration(config), viewDirectionMapping({{0, "East"}, {1, "South"}, {2, "West"}, {3, "North"}}) {
   }
 
   std::ostream& PrismModulesPrinter::printModel(std::ostream &os, const ModelType &modelType) {
@@ -57,24 +57,26 @@ namespace prism {
     for (auto const& key : keys) {
       if(first) first = false;
       else os << " | ";
-      os << "((!" << agentName << "_has_" << key.getColor() << "_key) & ";
-
+      std::string keyColor = key.getColor();
+      std::string xKey = "xKey" + keyColor;
+      std::string yKey = "yKey" + keyColor;
       coordinates coords;
+      
+      os << "!" << agentName << "_has_" << keyColor << "_key & ";
 
       if (direction == "North") {
-        coords = key.getSouth();
+        os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "-1 = " << yKey << ")";
       } else if (direction == "South") {
-        coords = key.getNorth();
+        os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "+1 = " << yKey << ")";
       } else if (direction == "East") {
-        coords = key.getWest();
+        os << " (x" << agentName << "+1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
       } else if (direction == "West") {
-        coords = key.getEast();
+        os << " (x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
       } else {
-        *((size_t*)0);
+        os << "Invalid Direction! in Key Restriction";
       }
-
-      os << "(x" << agentName << "=" << coords.first << "&y" << agentName << "=" << coords.second << "))";
     }
+
     os << ";\n";
     return os;
   }
@@ -208,7 +210,7 @@ namespace prism {
                               const cells &slipperyWest,
                               const cells &keys) {
     printRestrictionFormula(os, agentName, "North", restrictionNorth);
-    printRestrictionFormula(os, agentName, "East ", restrictionEast);
+    printRestrictionFormula(os, agentName, "East", restrictionEast);
     printRestrictionFormula(os, agentName, "South", restrictionSouth);
     printRestrictionFormula(os, agentName, "West", restrictionWest);
     
@@ -294,10 +296,10 @@ namespace prism {
       std::string yKey = "yKey" + keyColor;      
       os << "label \"" << agentName << "PickedUp" << keyColor << "Key\" = " << agentName << "_has_" << keyColor << "_key = true;\n";
       os << "formula " << agentName << "CanPickUp" << keyColor << "Key = ";
-      os << "((x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << "&view" << agentName << " = 1) |";
-      os << " (x" << agentName << "+1 = " << xKey << "&y" << agentName << "   = " << yKey << "&view" << agentName << " = 3) |";
-      os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "-1 = " << yKey << "&view" << agentName << " = 0) |";
-      os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "+1 = " << yKey << "&view" << agentName << " = 2) ) &";
+      os << "((x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << "&view" << agentName << " = 2) |";
+      os << " (x" << agentName << "+1 = " << xKey << "&y" << agentName << "   = " << yKey << "&view" << agentName << " = 0) |";
+      os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "-1 = " << yKey << "&view" << agentName << " = 3) |";
+      os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "+1 = " << yKey << "&view" << agentName << " = 1) ) &";
       os << "!" << agentName << "_has_" << keyColor << "_key;";
     }
     os << "\n";
@@ -328,30 +330,24 @@ namespace prism {
   std::ostream& PrismModulesPrinter::printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys) {
     for(auto const& key : keys) { // TODO ADD Drop action and enforce that pickup only possible if pockets empty (nothing picked up already)
       std::string keyColor = key.getColor();
-      os << "\t[pickup_" << keyColor << "_key] " << pickupGuard(agentName, keyColor) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true)\n";
+      os << "\t[pickup_" << keyColor << "_key]\t" << pickupGuard(agentName, keyColor) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true) ;";
+      os << "\n";
+      os << "\n";
      
-      viewVariable(agentName, 3, true);
-      os << "\t[drop_" << keyColor << "_key_north] " << dropGuard(agentName, keyColor, 3) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
-      os << " & (xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "-1);\n"; 
+      os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false);\n";
 
-      viewVariable(agentName, 2, true);
-      os << "\t[drop_" << keyColor << "_key_west] " << dropGuard(agentName, keyColor, 2) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
-      os << " & (xKey" << keyColor << "'=x" << agentName << "-1) & (yKey" << keyColor << "'=y" <<agentName << ");\n"; 
+      os << "\t[drop_" << keyColor << "_key_west]\t" << dropGuard(agentName, keyColor, 2) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false);\n";
 
-      viewVariable(agentName, 1, true);
-      os << "\t[drop_" << keyColor << "_key_south] " << dropGuard(agentName, keyColor, 1) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
-      os << " & (xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "+1);\n"; 
+      os << "\t[drop_" << keyColor << "_key_south]\t" << dropGuard(agentName, keyColor, 1) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false);\n";
 
-      viewVariable(agentName, 0, true);
-      os << "\t[drop_" << keyColor << "_key_east] " << dropGuard(agentName, keyColor, 0) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false)";
-      os << " & (xKey" << keyColor << "'=x" << agentName << "+1) & (yKey" << keyColor << "'=y" <<agentName << ");\n"; 
+      os << "\t[drop_" << keyColor << "_key_east]\t" << dropGuard(agentName, keyColor, 0) << "-> ";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=false) & (" << agentName << "_is_carrying_object'=false);\n";
     }
-    os << "\n";
+
     return os;
   }
 
@@ -360,7 +356,7 @@ namespace prism {
   }
 
   std::string PrismModulesPrinter::dropGuard(const AgentName &agentName, const std::string keyColor, size_t view) {
-    return viewVariable(agentName, view, true) + agentName + "_has_" + keyColor + "_key\t";
+    return viewVariable(agentName, view, true) + "\t!" + agentName + "CannotMove" + viewDirectionMapping.at(view) + "\t&\t" + agentName + "_has_" + keyColor + "_key\t";
   }
 
   std::ostream& PrismModulesPrinter::printActionsForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles) {
@@ -444,7 +440,7 @@ namespace prism {
 
     os << "\tx" << keyIdentifier << " : [1.." << boundaries.second  << "];\n";
     os << "\ty" << keyIdentifier << " : [1.." << boundaries.first << "];\n";
-
+    os << "\n";
     printKeyActions(os, key ,keyIdentifier);
 
     os << "\n";
@@ -452,7 +448,21 @@ namespace prism {
   }
   
   std::ostream& PrismModulesPrinter::printKeyActions(std::ostream &os, const cell &key ,const std::string &keyIdentifier) {
-   
+    std::string keyColor = key.getColor();
+    std::string agentName = "Agent";
+ 
+    os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
+    os << "(xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "-1) ;\n"; 
+
+    os << "\t[drop_" << keyColor << "_key_west]\t" << dropGuard(agentName, keyColor, 2) << "-> ";
+    os << "(xKey" << keyColor << "'=x" << agentName << "-1) & (yKey" << keyColor << "'=y" <<agentName << ") ;\n"; 
+
+    os << "\t[drop_" << keyColor << "_key_south]\t" << dropGuard(agentName, keyColor, 1) << "-> ";
+    os << "(xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "+1) ;\n"; 
+
+    os << "\t[drop_" << keyColor << "_key_east]\t" << dropGuard(agentName, keyColor, 0) << "-> ";
+    os << "(xKey" << keyColor << "'=x" << agentName << "+1) & (yKey" << keyColor << "'=y" <<agentName << ") ;\n"; 
+
     return os;
   }
 

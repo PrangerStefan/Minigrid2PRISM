@@ -96,5 +96,6 @@ namespace prism {
       const size_t numberOfPlayer;
       bool enforceOneWays;
       std::vector<Configuration> configuration;
+      std::map<int, std::string> viewDirectionMapping;
   };
 }

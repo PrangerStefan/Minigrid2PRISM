@@ -37,7 +37,13 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(goals), [](cell c) {
       return c.type == Type::Goal;
   });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(keys), [](cell c) {
+  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(keys), [this](cell c) {
+      for (auto const& key : keys) {
+        if (key.color == c.color && key.type == c.type) {
+          throw std::logic_error("Multiple keys with same color not supported " + key.getColor() + "\n");
+        }
+      }
+
       return c.type == Type::Key;
   });
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(boxes), [](cell c) {
