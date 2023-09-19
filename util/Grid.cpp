@@ -97,7 +97,7 @@ cells Grid::getGridCells() {
 }
 
 bool Grid::isBlocked(coordinates p) {
-  return isWall(p) || isLockedDoor(p) || isKey(p);
+  return isWall(p); //|| isLockedDoor(p) || isKey(p);
 }
 
 bool Grid::isWall(coordinates p) {
@@ -215,9 +215,11 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
       }
     }
   }
-
+  cells doors;
+  doors.insert(doors.end(), lockedDoors.begin(), lockedDoors.end());
+  doors.insert(doors.end(), unlockedDoors.begin(), unlockedDoors.end());
   for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition) {
-    printer.printFormulas(os, agentNameAndPosition->first, northRestriction, eastRestriction, southRestriction, westRestriction, { slipperyNorth, slipperyEast, slipperySouth, slipperyWest }, lava, walls, noTurnFloor, slipperyNorth, slipperyEast, slipperySouth, slipperyWest, keys);
+    printer.printFormulas(os, agentNameAndPosition->first, northRestriction, eastRestriction, southRestriction, westRestriction, { slipperyNorth, slipperyEast, slipperySouth, slipperyWest }, lava, walls, noTurnFloor, slipperyNorth, slipperyEast, slipperySouth, slipperyWest, keys, doors);
     printer.printGoalLabel(os, agentNameAndPosition->first, goals);
     printer.printKeysLabels(os, agentNameAndPosition->first, keys);
   }
@@ -237,7 +239,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     bool agentWithView = std::find(gridOptions.agentsWithView.begin(), gridOptions.agentsWithView.end(), agentName) != gridOptions.agentsWithView.end();
     bool agentWithProbabilisticBehaviour = std::find(gridOptions.agentsWithProbabilisticBehaviour.begin(), gridOptions.agentsWithProbabilisticBehaviour.end(), agentName) != gridOptions.agentsWithProbabilisticBehaviour.end();
     std::set<std::string> slipperyActions;
-  printer.printInitStruct(os, agentName, keys);
+  printer.printInitStruct(os, agentName, keys, lockedDoors, unlockedDoors);
     if(agentWithProbabilisticBehaviour) printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
     else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView);
     for(auto const& c : slipperyNorth) {
@@ -272,10 +274,17 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
       printer.printConfiguration(os, configuration);
     }
   }
-
+  // TODO CHANGE HANDLING
+  std::string agentName = agentNames.at(0);
   for (auto const & key : keys) {
     os << "\n";
-    printer.printKeyModule(os, key, maxBoundaries);
+    printer.printKeyModule(os, key, maxBoundaries, agentName);
+    printer.printEndmodule(os);
+  }
+
+  for (auto const& door : lockedDoors) {
+    os << "\n";
+    printer.printDoorModule(os, door, maxBoundaries, agentName);
     printer.printEndmodule(os);
   }
 

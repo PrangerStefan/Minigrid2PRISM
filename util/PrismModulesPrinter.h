@@ -13,6 +13,7 @@ namespace prism {
 
       std::ostream& printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &cells);
       std::ostream& printKeyRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &keys);
+      std::ostream& printDoorRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &doors);
       std::ostream& printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest);
       std::ostream& printGoalLabel(std::ostream& os, const AgentName&agentName, const cells &goals);
       std::ostream& printCrashLabel(std::ostream &os, const std::vector<AgentName> agentNames);
@@ -37,8 +38,15 @@ namespace prism {
                                   const cells &slipperyEast,
                                   const cells &slipperySouth,
                                   const cells &slipperyWest,
-                                  const cells &keys);
-      std::ostream& printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries);
+                                  const cells &keys,
+                                  const cells &doors);
+
+      std::ostream& printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries, AgentName agentName);
+      std::ostream& printKeyActions(std::ostream &os, const cell& key ,const std::string &keyIdentifier, AgentName agentName);
+
+      std::ostream& printDoorModule(std::ostream &os, const cell &door, const coordinates &boundaries, AgentName agentName);
+      std::ostream& printDoorActions(std::ostream &os, const cell &door ,const std::string &doorIdentifier, AgentName agentName);
+
        /*
         * Representation for Slippery Tile.
         *  -) North: Slips from North to South
@@ -69,14 +77,13 @@ namespace prism {
       std::ostream& printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys);
       std::ostream& printBooleansForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles);
       std::ostream& printActionsForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles);
-      std::ostream& printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys);
+      std::ostream& printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys, const cells &lockedDoors, const cells &unlockedDoors);
       std::ostream& printModule(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &boundaries, const coordinates& initialPosition, const cells &keys, const std::map<Color, cells> &backgroundTiles, const bool agentWithView, const std::vector<float> &probabilities = {});
       std::ostream& printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability = 1.0);
       std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex);
       std::ostream& printEndmodule(std::ostream &os);
       std::ostream& printPlayerStruct(std::ostream &os, const AgentName &agentName, const bool agentWithView, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});
       std::ostream& printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer);
-      std::ostream& printKeyActions(std::ostream &os, const cell& key ,const std::string &keyIdentifier);
       std::ostream& printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
 
       std::ostream& printConfiguration(std::ostream &os, const std::vector<Configuration>& configurations);
@@ -86,6 +93,8 @@ namespace prism {
       std::string pickupGuard(const AgentName &agentName, const std::string keyColor);
       std::string dropGuard(const AgentName &agentName, const std::string keyColor, size_t view);
       std::string moveUpdate(const size_t &agentIndex);
+      std::string unlockGuard(const AgentName &agentName, const cell& door);
+      std::string toggleGuard(const AgentName &agentName, const cell& door);
 
       std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView);
 

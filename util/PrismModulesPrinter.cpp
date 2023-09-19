@@ -47,6 +47,7 @@ namespace prism {
       os << "(x" << agentName << "=" << cell.column << "&y" << agentName << "=" << cell.row << ")";
     }
     os << " | " << agentName << "CannotMove" << direction << "BecauseOfKey";
+    os << " | " << agentName << "CannotMove" << direction << "BecauseOfDoor";
     os << ";\n";
     return os;
   }
@@ -62,16 +63,16 @@ namespace prism {
       std::string yKey = "yKey" + keyColor;
       coordinates coords;
       
-      os << "!" << agentName << "_has_" << keyColor << "_key & ";
+      os << "(!" << agentName << "_has_" << keyColor << "_key & ";
 
       if (direction == "North") {
-        os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "-1 = " << yKey << ")";
+        os << " x" << agentName << "   = " << xKey << "&y" << agentName << "-1 = " << yKey << ")";
       } else if (direction == "South") {
-        os << " (x" << agentName << "   = " << xKey << "&y" << agentName << "+1 = " << yKey << ")";
+        os << " x" << agentName << "   = " << xKey << "&y" << agentName << "+1 = " << yKey << ")";
       } else if (direction == "East") {
-        os << " (x" << agentName << "+1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
+        os << " x" << agentName << "+1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
       } else if (direction == "West") {
-        os << " (x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
+        os << " x" << agentName << "-1 = " << xKey << "&y" << agentName << "   = " << yKey << ")";
       } else {
         os << "Invalid Direction! in Key Restriction";
       }
@@ -81,6 +82,38 @@ namespace prism {
     return os;
   }
 
+  std::ostream& PrismModulesPrinter::printDoorRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &doors) {
+    bool first = true;
+
+    os << "formula " << agentName << "CannotMove" << direction << "BecauseOfDoor" << " = ";
+    
+    for (auto const& door : doors) {
+      if (first) first = false;
+      else os << " | ";
+
+      std::string doorColor = door.getColor();
+      size_t y = door.getCoordinates().first;
+      size_t x = door.getCoordinates().second;
+
+      os << "(!Door" << doorColor << "open & ";
+
+      if (direction == "North") {
+        os << " x" << agentName << "   = " << x << "&y" << agentName << "-1 = " << y << ")";
+      } else if (direction == "South") {
+        os << " x" << agentName << "   = " << x << "&y" << agentName << "+1 = " << y << ")";
+      } else if (direction == "East") {
+        os << " x" << agentName << "+1 = " << x << "&y" << agentName << "   = " << y << ")";
+      } else if (direction == "West") {
+        os << " x" << agentName << "-1 = " << y << "&y" << agentName << "   = " << y << ")";
+      } else {
+        os << "Invalid Direction! in Key Restriction";
+      }
+
+    }
+
+    os << ";\n";    
+    return os;
+  }
 
 
   std::ostream& PrismModulesPrinter::printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest) {
@@ -208,7 +241,8 @@ namespace prism {
                               const cells &slipperyEast,
                               const cells &slipperySouth,
                               const cells &slipperyWest,
-                              const cells &keys) {
+                              const cells &keys,
+                              const cells &doors) {
     printRestrictionFormula(os, agentName, "North", restrictionNorth);
     printRestrictionFormula(os, agentName, "East", restrictionEast);
     printRestrictionFormula(os, agentName, "South", restrictionSouth);
@@ -219,6 +253,13 @@ namespace prism {
       printKeyRestrictionFormula(os, agentName, "East", keys);
       printKeyRestrictionFormula(os, agentName, "South", keys);
       printKeyRestrictionFormula(os, agentName, "West", keys);
+    }
+
+    if (!doors.empty()) {
+      printDoorRestrictionFormula(os, agentName, "North", doors);
+      printDoorRestrictionFormula(os, agentName, "East", doors);
+      printDoorRestrictionFormula(os, agentName, "South", doors);
+      printDoorRestrictionFormula(os, agentName, "West", doors);
     }
     
     printIsOnSlipperyFormula(os, agentName, slipperyCollection, slipperyNorth, slipperyEast, slipperySouth, slipperyWest);
@@ -329,10 +370,10 @@ namespace prism {
 
   std::ostream& PrismModulesPrinter::printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys) {
     for(auto const& key : keys) { // TODO ADD Drop action and enforce that pickup only possible if pockets empty (nothing picked up already)
+      os << "\n";
       std::string keyColor = key.getColor();
       os << "\t[pickup_" << keyColor << "_key]\t" << pickupGuard(agentName, keyColor) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true) ;";
-      os << "\n";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true) ;\n";
       os << "\n";
      
       os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
@@ -371,7 +412,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys) {
+  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys, const cells &lockedDoors, const cells &unlockedDoors) {
     os << "init\n";
     os << "\t(!AgentIsInGoal & !AgentIsInLava & !AgentDone & !AgentIsOnWall)";
     if(enforceOneWays) {
@@ -384,6 +425,14 @@ namespace prism {
       os << " & ( !" << agentName << "_has_" << key.getColor() << "_key )";
       os << " & ( xKey" << key.getColor() << "="<< key.column << ")";
       os << " & ( yKey" << key.getColor() << "=" << key.row << ")";
+    }
+
+    for (auto const& locked : lockedDoors) {
+      os << " & (Door" << locked.getColor() << "locked & !Door" << locked.getColor() << "open)";
+    }
+
+    for (auto const& unlocked : unlockedDoors) {
+      os << " & (!Door" << unlocked.getColor() << "locked & !Door" << unlocked.getColor() << "open)";
     }
 
     os << " & ( !" << agentName << "_is_carrying_object" << ")";
@@ -433,7 +482,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries) {
+  std::ostream& PrismModulesPrinter::printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries, AgentName agentName) {
     std::string keyIdentifier = "Key" + key.getColor();
 
     os << "module " << keyIdentifier << "\n";
@@ -441,15 +490,14 @@ namespace prism {
     os << "\tx" << keyIdentifier << " : [1.." << boundaries.second  << "];\n";
     os << "\ty" << keyIdentifier << " : [1.." << boundaries.first << "];\n";
     os << "\n";
-    printKeyActions(os, key ,keyIdentifier);
+    printKeyActions(os, key ,keyIdentifier, agentName);
 
     os << "\n";
     return os;
   }
   
-  std::ostream& PrismModulesPrinter::printKeyActions(std::ostream &os, const cell &key ,const std::string &keyIdentifier) {
+  std::ostream& PrismModulesPrinter::printKeyActions(std::ostream &os, const cell &key ,const std::string &keyIdentifier, AgentName agentName) {
     std::string keyColor = key.getColor();
-    std::string agentName = "Agent";
  
     os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
     os << "(xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "-1) ;\n"; 
@@ -465,6 +513,57 @@ namespace prism {
 
     return os;
   }
+
+  std::ostream& PrismModulesPrinter::printDoorModule(std::ostream &os, const cell &door, const coordinates &boundaries, AgentName agent) {
+    std::string doorIdentifier = "Door" + door.getColor();
+    os << "module " << doorIdentifier << "\n";
+    
+    os << "\t" << doorIdentifier << "locked : bool;\n";
+    os << "\t" << doorIdentifier << "open : bool;\n";
+
+    printDoorActions(os, door, doorIdentifier, agent);
+    
+    return os;
+  }
+
+  std::ostream& PrismModulesPrinter::printDoorActions(std::ostream &os, const cell &door ,const std::string &doorIdentifier, AgentName agentName) {    
+    os << "\t[" << "unlock_" << doorIdentifier << "]\t" << unlockGuard(agentName, door) << " -> ";
+    os << "(" << doorIdentifier << "locked'=false) & (" << doorIdentifier << "open'=true) ;\n";
+
+    os << "\t[" << "toggle_" << doorIdentifier << "]\t" << toggleGuard(agentName, door) << " -> ";
+    os << "(" <<  doorIdentifier << "open'=!" << doorIdentifier << "open) ;\n";
+
+    return os;
+  }
+
+  std::string PrismModulesPrinter::unlockGuard(const AgentName &agentName, const cell& door) {
+    std::string doorColor = door.getColor();
+    std::string ret;
+    ret += agentName +  "_has_" + doorColor + "_key & ";
+    ret +=  "((" + viewVariable(agentName, 0, true) + "x" + agentName + "+ 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 1, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " + 1 = " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 2, true) + "x" + agentName + "- 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 3, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " - 1 = " + std::to_string(door.row) + "))";
+    
+
+    return ret;
+  }
+
+
+  std::string PrismModulesPrinter::toggleGuard(const AgentName &agentName, const cell& door) {
+    std::string doorColor = door.getColor();
+    std::string ret;
+
+    ret +=  "(" + viewVariable(agentName, 0, true) + "x" + agentName + "+ 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 1, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " + 1 = " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 2, true) + "x" + agentName + "- 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 3, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " - 1 = " + std::to_string(door.row) + ")";
+    
+    
+    
+    return ret;
+  }
+
 
 
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
