@@ -104,7 +104,7 @@ YAML::Node YAML::convert<Label>::encode(const Label& rhs) {
 }
 
 bool YAML::convert<Label>::decode(const YAML::Node& node, Label& rhs) {
-    if (!node.Type() == NodeType::Map) {
+    if (!node.Type() == NodeType::Map || !node["label"] || !node["text"]) {
         return false;
     }
     rhs.label_ = node["label"].as<std::string>();
@@ -128,7 +128,7 @@ YAML::Node YAML::convert<Formula>::encode(const Formula& rhs) {
 }
 
 bool YAML::convert<Formula>::decode(const YAML::Node& node, Formula& rhs) {
-    if (!node.Type() == NodeType::Map) {
+    if (!node.IsDefined() || !node.Type() == NodeType::Map || !node["formula"] || !node["content"]) {
       return false;
     }
 
@@ -150,11 +150,20 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
 
         try {
             YAML::Node config = YAML::LoadFile(file_);  
+            std::vector<Label> labels;
+            std::vector<Formula> formulas;
+            std::vector<Module> modules;
 
-            const std::vector<Label> labels = config["labels"].as<std::vector<Label>>();
-            const std::vector<Formula> formulas = config["formulas"].as<std::vector<Formula>>();
-            const std::vector<Module> modules = config["modules"].as<std::vector<Module>>();
-
+            if (config["labels"]) {
+                labels = config["labels"].as<std::vector<Label>>();
+            }
+            if (config["formulas"]) {
+                formulas = config["formulas"].as<std::vector<Formula>>();
+            }
+            if (config["modules"]) {
+                modules = config["modules"].as<std::vector<Module>>();
+            }
+        
             for (auto& label : labels) {
                 configuration.push_back({label.createExpression(), label.label_ , ConfigType::Label, label.overwrite_});
             }
