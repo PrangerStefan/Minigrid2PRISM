@@ -38,16 +38,22 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction,  const cells &cells) {
+  std::ostream& PrismModulesPrinter::printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction,  const cells &grid_cells, const cells &keys, const cells &doors) {
     bool first = true;
     os << "formula " << agentName << "CannotMove" << direction << " = " ;
-    for(auto const& cell : cells) {
+    for(auto const& cell : grid_cells) {
       if(first) first = false;
       else os << " | ";
       os << "(x" << agentName << "=" << cell.column << "&y" << agentName << "=" << cell.row << ")";
     }
-    os << " | " << agentName << "CannotMove" << direction << "BecauseOfKey";
-    os << " | " << agentName << "CannotMove" << direction << "BecauseOfDoor";
+
+    if (!keys.empty()) {
+      os << " | " << agentName << "CannotMove" << direction << "BecauseOfKey";  
+    }
+    if (!doors.empty()) {
+      os << " | " << agentName << "CannotMove" << direction << "BecauseOfDoor";
+    }
+  
     os << ";\n";
     return os;
   }
@@ -205,7 +211,7 @@ namespace prism {
     os << "formula " << agentName << "SlipperyTurnLeftAllowed = true;\n";
     os << "formula " << agentName << "SlipperyTurnRightAllowed = true;\n";
     os << "formula " << agentName << "SlipperyMoveForwardAllowed = true;\n";
-    os << "label \"FixedStates\" = " << agentName << "IsFixed | !" << agentName << "SlipperyTurnRightAllowed | !" << agentName << "SlipperyTurnLeftAllowed | !" << agentName << "SlipperyMoveForwardAllowed | " << agentName << "IsInGoal | " << agentName << "IsInLava";
+    os << "label \"FixedStates" << agentName << "\" = " << agentName << "IsFixed | !" << agentName << "SlipperyTurnRightAllowed | !" << agentName << "SlipperyTurnLeftAllowed | !" << agentName << "SlipperyMoveForwardAllowed | " << agentName << "IsInGoal | " << agentName << "IsInLava";
     if(enforceOneWays) {
       os << " | " << agentName << "CannotTurn";
     }
@@ -243,10 +249,10 @@ namespace prism {
                               const cells &slipperyWest,
                               const cells &keys,
                               const cells &doors) {
-    printRestrictionFormula(os, agentName, "North", restrictionNorth);
-    printRestrictionFormula(os, agentName, "East", restrictionEast);
-    printRestrictionFormula(os, agentName, "South", restrictionSouth);
-    printRestrictionFormula(os, agentName, "West", restrictionWest);
+    printRestrictionFormula(os, agentName, "North", restrictionNorth, keys, doors);
+    printRestrictionFormula(os, agentName, "East", restrictionEast, keys, doors);
+    printRestrictionFormula(os, agentName, "South", restrictionSouth, keys, doors);
+    printRestrictionFormula(os, agentName, "West", restrictionWest, keys, doors);
     
     if (!keys.empty()) {
       printKeyRestrictionFormula(os, agentName, "North", keys);
@@ -373,7 +379,7 @@ namespace prism {
       os << "\n";
       std::string keyColor = key.getColor();
       os << "\t[pickup_" << keyColor << "_key]\t" << pickupGuard(agentName, keyColor) << "-> ";
-      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true) ;\n";
+      os << "(" << agentName << "_has_" << keyColor << "_key'=true) & (" << agentName << "_is_carrying_object'=true);\n";
       os << "\n";
      
       os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
@@ -412,19 +418,31 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys, const cells &lockedDoors, const cells &unlockedDoors) {
+  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors) {
     os << "init\n";
-    os << "\t(!AgentIsInGoal & !AgentIsInLava & !AgentDone & !AgentIsOnWall)";
-    if(enforceOneWays) {
-      os << " & ( !AgentCannotTurn ) ";
-    } else {
-      os << " & ( !AgentIsOnSlippery ) ";
-    }
+    os << "\t";
+    
+    bool first = true;
+    for (auto const& agent : agents) {
+      if (first) first = false;
+      else os << " & ";
+      os << "(!" << agent.first << "IsInGoal & !" << agent.first << "IsInLava & !" << agent.first << "Done & !" << agent.first << "IsOnWall & ";
+      os << "x" << agent.first << "=" << agent.second.second << " & y" << agent.first << "=" << agent.second.first << ")";
+      os << " & !" << agent.first << "_is_carrying_object";
+      if(enforceOneWays) {
+        os << " & ( !AgentCannotTurn ) ";
+      } else {
+        os << " & ( !AgentIsOnSlippery ) ";
+      }
 
+      for (auto const& key : keys) {
+         os << " & ( !" << agent.first << "_has_" << key.first << "_key )";
+      }
+    }
+    
     for (auto const& key : keys) {
-      os << " & ( !" << agentName << "_has_" << key.getColor() << "_key )";
-      os << " & ( xKey" << key.getColor() << "="<< key.column << ")";
-      os << " & ( yKey" << key.getColor() << "=" << key.row << ")";
+      os << " & ( xKey" << key.first << "="<< key.second.second<< ")";
+      os << " & ( yKey" << key.first << "=" << key.second.first << ")";
     }
 
     for (auto const& locked : lockedDoors) {
@@ -435,7 +453,7 @@ namespace prism {
       os << " & (!Door" << unlocked.getColor() << "locked & !Door" << unlocked.getColor() << "open)";
     }
 
-    os << " & ( !" << agentName << "_is_carrying_object" << ")";
+    // os << " & ( !" << agentName << "_is_carrying_object" << ")";
 
     os << "\nendinit\n\n";
 
@@ -487,8 +505,8 @@ namespace prism {
 
     os << "module " << keyIdentifier << "\n";
 
-    os << "\tx" << keyIdentifier << " : [1.." << boundaries.second  << "];\n";
-    os << "\ty" << keyIdentifier << " : [1.." << boundaries.first << "];\n";
+    os << "\tx" << keyIdentifier << " : [-1.." << boundaries.second  << "];\n";
+    os << "\ty" << keyIdentifier << " : [-1.." << boundaries.first << "];\n";
     os << "\n";
     printKeyActions(os, key ,keyIdentifier, agentName);
 
@@ -498,7 +516,10 @@ namespace prism {
   
   std::ostream& PrismModulesPrinter::printKeyActions(std::ostream &os, const cell &key ,const std::string &keyIdentifier, AgentName agentName) {
     std::string keyColor = key.getColor();
- 
+
+    os << "\t[pickup_" << keyColor << "key]\t" << pickupGuard(agentName, keyColor) << "-> ";
+    os <<  "(xKey" << keyColor << "'=-1) & (yKey" << keyColor << "'=-1)" << ";\n";
+
     os << "\t[drop_" << keyColor << "_key_north]\t" << dropGuard(agentName, keyColor, 3) << "-> ";
     os << "(xKey" << keyColor << "'=x" << agentName << ") & (yKey" << keyColor << "'=y" <<agentName << "-1) ;\n"; 
 
@@ -553,11 +574,11 @@ namespace prism {
   std::string PrismModulesPrinter::toggleGuard(const AgentName &agentName, const cell& door) {
     std::string doorColor = door.getColor();
     std::string ret;
-
+    ret += "!Door" + doorColor + "locked & (";
     ret +=  "(" + viewVariable(agentName, 0, true) + "x" + agentName + "+ 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
     ret +=  " | (" + viewVariable(agentName, 1, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " + 1 = " + std::to_string(door.row) + ")";
     ret +=  " | (" + viewVariable(agentName, 2, true) + "x" + agentName + "- 1 = " + std::to_string(door.column) + " & y" + agentName + "= " + std::to_string(door.row) + ")";
-    ret +=  " | (" + viewVariable(agentName, 3, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " - 1 = " + std::to_string(door.row) + ")";
+    ret +=  " | (" + viewVariable(agentName, 3, true) + "x" + agentName + " = " + std::to_string(door.column) + " & y" + agentName + " - 1 = " + std::to_string(door.row) + "))";
     
     
     
@@ -837,34 +858,34 @@ namespace prism {
 
   std::ostream& PrismModulesPrinter::printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles) {
     if(lava.size() != 0) {
-      os << "rewards \"SafetyNoBFS\"\n";
-      os << "\tAgentIsInLavaAndNotDone: -100;\n";
+      os << "rewards \"" << agentName << "SafetyNoBFS\"\n";
+      os << "\t" <<agentName << "IsInLavaAndNotDone: -100;\n";
       os << "endrewards\n";
     }
 
     if (!goals.empty() || !lava.empty())  {
-      os << "rewards \"SafetyNoBFSAndGoal\"\n";
-      if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone:  100;\n";
-      if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
+      os << "rewards \"" << agentName << "SafetyNoBFSAndGoal\"\n";
+      if(goals.size() != 0) os << "\t" << agentName << "IsInGoalAndNotDone:  100;\n";
+      if(lava.size() != 0) os << "\t" << agentName << "IsInLavaAndNotDone: -100;\n";
       os << "endrewards\n";
     }
 
-    os << "rewards \"Time\"\n";
-    os << "\t!AgentIsInGoal : -1;\n";
-    if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone:  100;\n";
-    if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
+    os << "rewards \"" << agentName << "Time\"\n";
+    os << "\t!" << agentName << "IsInGoal : -1;\n";
+    if(goals.size() != 0) os << "\t" << agentName << "IsInGoalAndNotDone:  100;\n";
+    if(lava.size() != 0) os << "\t" << agentName << "IsInLavaAndNotDone: -100;\n";
     os << "endrewards\n";
 
     if(stateRewards.size() > 0) {
-      os << "rewards \"SafetyWithBFS\"\n";
-      if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
+      os << "rewards \"" << agentName << "SafetyWithBFS\"\n";
+      if(lava.size() != 0) os << "\t" << agentName << "IsInLavaAndNotDone: -100;\n";
       for(auto const [coordinates, reward] : stateRewards) {
         os << "\txAgent=" << coordinates.first << "&yAgent=" << coordinates.second << " : " << reward << ";\n";
       }
       os << "endrewards\n";
     }
     if(stateRewards.size() > 0) {
-      os << "rewards \"SafetyWithBFSAndGoal\"\n";
+      os << "rewards \"" << agentName << "SafetyWithBFSAndGoal\"\n";
       if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone:  100;\n";
       if(lava.size() != 0) os << "\tAgentIsInLavaAndNotDone: -100;\n";
       for(auto const [coordinates, reward] : stateRewards) {

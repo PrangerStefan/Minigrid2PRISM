@@ -37,13 +37,7 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(goals), [](cell c) {
       return c.type == Type::Goal;
   });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(keys), [this](cell c) {
-      for (auto const& key : keys) {
-        if (key.color == c.color && key.type == c.type) {
-          throw std::logic_error("Multiple keys with same color not supported " + key.getColor() + "\n");
-        }
-      }
-
+  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(keys), [this](cell c) {    
       return c.type == Type::Key;
   });
   std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(boxes), [](cell c) {
@@ -67,6 +61,18 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
       }
     } catch(const std::logic_error& e) {
       std::cerr << "Expected agents colors to be different. Agent with color : '" << color << "' already present." << std::endl;
+      throw;
+    }
+  }
+  for(auto const& key : keys) {
+    std::string color = key.getColor();
+    try {
+      auto success = keyNameAndPositionMap.insert({color, key.getCoordinates() });
+      if (!success.second) {
+        throw std::logic_error("Multiple keys with same color not supported " + color + "\n");
+      }
+    } catch(const std::logic_error& e) {
+      std::cerr << "Expected key colors to be different. Key with color : '" << color << "' already present." << std::endl;
       throw;
     }
   }
@@ -233,13 +239,16 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     printer.printCrashLabel(os, agentNames);
   }
   size_t agentIndex  = 0;
+
+  printer.printInitStruct(os, agentNameAndPositionMap, keyNameAndPositionMap, lockedDoors, unlockedDoors);
+
+
   for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition, agentIndex++) {
     AgentName agentName = agentNameAndPosition->first;
     //std::cout << "Agent Name: " << agentName << std::endl;
     bool agentWithView = std::find(gridOptions.agentsWithView.begin(), gridOptions.agentsWithView.end(), agentName) != gridOptions.agentsWithView.end();
     bool agentWithProbabilisticBehaviour = std::find(gridOptions.agentsWithProbabilisticBehaviour.begin(), gridOptions.agentsWithProbabilisticBehaviour.end(), agentName) != gridOptions.agentsWithProbabilisticBehaviour.end();
-    std::set<std::string> slipperyActions;
-  printer.printInitStruct(os, agentName, keys, lockedDoors, unlockedDoors);
+    std::set<std::string> slipperyActions; // TODO AGENT POSITION INITIALIZATIN
     if(agentWithProbabilisticBehaviour) printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
     else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView);
     for(auto const& c : slipperyNorth) {
@@ -270,9 +279,10 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     printer.printRewards(os, agentName, stateRewards, lava, goals, backgroundTiles);
     //}
 
-    if (!configuration.empty()) {
-      printer.printConfiguration(os, configuration);
-    }
+  }
+
+  if (!configuration.empty()) {
+    printer.printConfiguration(os, configuration);
   }
   // TODO CHANGE HANDLING
   std::string agentName = agentNames.at(0);

@@ -11,7 +11,7 @@ namespace prism {
     public:
       PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, std::vector<Configuration> config ,const bool enforceOneWays = false);
 
-      std::ostream& printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &cells);
+      std::ostream& printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &grid_cells, const cells& keys, const cells& doors);
       std::ostream& printKeyRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &keys);
       std::ostream& printDoorRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &doors);
       std::ostream& printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest);
@@ -77,7 +77,7 @@ namespace prism {
       std::ostream& printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys);
       std::ostream& printBooleansForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles);
       std::ostream& printActionsForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles);
-      std::ostream& printInitStruct(std::ostream &os, const AgentName &agentName, const cells &keys, const cells &lockedDoors, const cells &unlockedDoors);
+      std::ostream& printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors);
       std::ostream& printModule(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &boundaries, const coordinates& initialPosition, const cells &keys, const std::map<Color, cells> &backgroundTiles, const bool agentWithView, const std::vector<float> &probabilities = {});
       std::ostream& printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability = 1.0);
       std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex);

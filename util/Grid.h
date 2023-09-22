@@ -46,6 +46,7 @@ class Grid {
     cell agent;
     cells adversaries;
     AgentNameAndPositionMap agentNameAndPositionMap;
+    KeyNameAndPositionMap keyNameAndPositionMap;
 
     cells walls;
     cells floor;
