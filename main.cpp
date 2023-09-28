@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
       //grid.printToPrism(std::cout, prism::ModelType::MDP);
       std::stringstream ss;
       // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
-      grid.printToPrism(ss, configurations ,prism::ModelType::MDP);
+      grid.printToPrism(ss, configurations , gridOptions.getModelType());
       std::string str = ss.str();
       grid.applyOverwrites(str, configurations);
       file << str;

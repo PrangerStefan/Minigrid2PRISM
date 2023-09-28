@@ -15,6 +15,8 @@ struct GridOptions {
   std::vector<AgentName> agentsWithProbabilisticBehaviour;
   std::vector<float>     probabilitiesForActions;
   bool                   enforceOneWays;
+
+  prism::ModelType getModelType() const;
 };
 
 class Grid {

@@ -2,6 +2,15 @@
 
 #include <algorithm>
 
+prism::ModelType GridOptions::getModelType() const 
+{
+  if (agentsWithView.size() > 1) {
+    return prism::ModelType::SMG;
+  } 
+
+  return prism::ModelType::MDP;
+}
+
 Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards)
   : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards)
 {
