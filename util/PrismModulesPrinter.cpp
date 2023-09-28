@@ -418,7 +418,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors) {
+  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors, prism::ModelType modelType) {
     os << "init\n";
     os << "\t";
     
@@ -453,7 +453,10 @@ namespace prism {
       os << " & (!Door" << unlocked.getColor() << "locked & !Door" << unlocked.getColor() << "open)";
     }
 
-    // os << " & ( !" << agentName << "_is_carrying_object" << ")";
+    if (modelType == ModelType::SMG) {
+      os << " & move=0"; 
+    }
+
 
     os << "\nendinit\n\n";
 
@@ -691,7 +694,8 @@ namespace prism {
         break;
     }
 
-    slipperyActions.insert(actionName);
+    slipperyActions.insert(actionName + "_left]");
+    slipperyActions.insert(actionName + "_right]");
 
     // override probability to 0 if corresp. direction is blocked
 
@@ -847,12 +851,14 @@ namespace prism {
     for(auto const& action : slipperyActions) {
       os << ", " << action;
     }
+
+    os << ", [" << agentName << "_done]";
     os << "\nendplayer\n";
     return os;
   }
 
   std::ostream& PrismModulesPrinter::printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer) {
-    os << "\nglobal move : [0.." << std::to_string(numberOfPlayer - 1) << "] init 0;\n\n";
+    os << "\nglobal move : [0.." << std::to_string(numberOfPlayer - 1) << "];\n\n";
     return os;
   }
 

@@ -249,7 +249,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   }
   size_t agentIndex  = 0;
 
-  printer.printInitStruct(os, agentNameAndPositionMap, keyNameAndPositionMap, lockedDoors, unlockedDoors);
+  printer.printInitStruct(os, agentNameAndPositionMap, keyNameAndPositionMap, lockedDoors, unlockedDoors, modelType);
 
 
   for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition, agentIndex++) {
