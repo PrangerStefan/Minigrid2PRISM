@@ -89,6 +89,9 @@ bool YAML::convert<Action>::decode(const YAML::Node& node, Action& rhs) {
     if (node["overwrite"]) {
         rhs.overwrite_ = node["overwrite"].as<bool>();
     }
+    if (node["index"]) {
+        rhs.index_ = node["index"].as<int>();
+    }
 
     return true;
 }
@@ -172,7 +175,7 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             }
             for (auto& module : modules) {
                 for (auto& action : module.actions_) {
-                    configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_});
+                    configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_, action.index_});
                 }
             }
 

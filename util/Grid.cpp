@@ -1,4 +1,5 @@
 #include "Grid.h"
+#include <boost/algorithm/string/find.hpp>
 
 #include <algorithm>
 
@@ -162,7 +163,8 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
       } else if (config.type_ == ConfigType::Label) {
         start_pos = str.find("label " + config.identifier_);
       } else if (config.type_ == ConfigType::Module) {
-        start_pos = str.find(config.identifier_);
+        auto iter = boost::find_nth(str, config.identifier_, config.index_);
+        start_pos = std::distance(str.begin(), iter.begin());
       }
 
       size_t end_pos = str.find(';', start_pos) + 1;
@@ -260,22 +262,25 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     std::set<std::string> slipperyActions; // TODO AGENT POSITION INITIALIZATIN
     if(agentWithProbabilisticBehaviour) printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
     else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView);
-    for(auto const& c : slipperyNorth) {
-      printer.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
-      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
-
+    if (!slipperyNorth.empty()) {
+      auto c = slipperyNorth.at(0);
+      printer.printSlipperyMove(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
+      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
     }
-    for(auto const& c : slipperyEast) {
-      printer.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
-      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
+    if (!slipperyEast.empty()) {
+      auto c = slipperyEast.at(0);
+      printer.printSlipperyMove(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
+      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
     }
-    for(auto const& c : slipperySouth) {
-      printer.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
-      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
+    if (!slipperySouth.empty()) {
+      auto c = slipperySouth.at(0);
+      printer.printSlipperyMove(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
+      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
     }
-    for(auto const& c : slipperyWest) {
-      printer.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
-      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
+    if (!slipperyWest.empty()) {
+      auto c = slipperyWest.at(0);
+      printer.printSlipperyMove(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
+      if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
     }
 
     printer.printEndmodule(os);
