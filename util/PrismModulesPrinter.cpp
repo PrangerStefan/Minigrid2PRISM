@@ -361,6 +361,16 @@ namespace prism {
     return os;
   }
 
+  std::ostream& PrismModulesPrinter::printConstants(std::ostream &os, const std::vector<std::string> &constants) {
+
+    for (auto& constant : constants) {
+      os << constant << std::endl;
+    }
+
+    return os;
+  }
+
+
   std::ostream& PrismModulesPrinter::printAvoidanceLabel(std::ostream &os, const std::vector<AgentName> agentNames, const int &distance) {
     os << "label avoidance = ";
     bool first = true;
@@ -681,7 +691,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printSlipperyTurn(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation) {
+   std::ostream& PrismModulesPrinter::printSlipperyTurn(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &c, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation) {
     constexpr std::size_t PROB_PIECES = 9, ALL_POSS_DIRECTIONS = 9;
 
     std::array<std::string, ALL_POSS_DIRECTIONS> positionTransition = {
@@ -712,6 +722,7 @@ namespace prism {
     std::string positionGuard;
     std::size_t remainPosIndex = 8;
     std::array<std::size_t, ALL_POSS_DIRECTIONS> prob_piece_dir; // { n, ne, w, se, s, sw, w, nw, CURRENT POS }
+    std::array<std::string, ALL_POSS_DIRECTIONS> prob_piece_dir_constants;
 
     switch (orientation)
     {
@@ -719,24 +730,28 @@ namespace prism {
         actionName = "\t[" + agentName + "turn_at_slip_north";
         positionGuard = "\t" + agentName + "IsOnSlipperyNorth";
         prob_piece_dir = { 0, 0, 0, 1, 1, 1, 0, 0, 0 /* <- R */ };
+        prob_piece_dir_constants = { "prop_zero", "prop_zero", "prop_zero", "prop_adj", "prop_adj" /* <- R */, "prop_adj", "prop_zero", "prop_zero","prop_zero" };
         break;
 
       case SlipperyType::South:
         actionName = "\t[" + agentName + "turn_at_slip_south";
         positionGuard = "\t" + agentName + "IsOnSlipperySouth";
         prob_piece_dir = { 1, 1, 0, 0, 0, 0, 0, 1, 0 /* <- R */ };
+        prob_piece_dir_constants = { "prop_adj", "prop_adj", "prop_zero", "prop_zero", "prop_zero", "prop_zero", "prop_zero", "prop_adj", "prop_zero" };
         break;
 
       case SlipperyType::East:
         actionName = "\t[" + agentName + "turn_at_slip_east";
         positionGuard = "\t" + agentName + "IsOnSlipperyEast";
         prob_piece_dir = { 0, 0, 0, 0, 0, 1, 1, 1, 0 /* <- R */ };
+        prob_piece_dir_constants = { "prop_zero", "prop_zero", "prop_zero", "prop_zero", "prop_zero", "prop_adj", "prop_adj", "prop_adj", "prop_zero" };
         break;
 
       case SlipperyType::West:
         actionName = "\t[" + agentName + "turn_at_slip_west";
         positionGuard = "\t" + agentName + "IsOnSlipperyWest";
         prob_piece_dir = { 0, 1, 1, 1, 0, 0, 0, 0, 0 /* <- R */ };
+        prob_piece_dir_constants = { "prop_zero", "prop_adj", "prop_adj", "prop_adj", "prop_zero", "prop_zero", "prop_zero", "prop_zero", "prop_zero" };
         break;
     }
 
@@ -753,7 +768,7 @@ namespace prism {
     // determine residual probability (R) by replacing 0 with (1 - overall sum)
 
     prob_piece_dir.at(remainPosIndex) = PROB_PIECES - std::accumulate(prob_piece_dir.begin(), prob_piece_dir.end(), 0);
-
+    prob_piece_dir_constants.at(remainPosIndex) = "prop_slippery_turn";
     // <DEBUG_AREA>
     {
       assert(prob_piece_dir.at(remainPosIndex) <= 9 && prob_piece_dir.at(remainPosIndex) >= 6 && "Value not in Range!");
@@ -763,18 +778,17 @@ namespace prism {
 
     // generic output (for every view transition)
     for (std::size_t v = 0; v < viewTransition.size(); v++) {
-        os << actionName << std::get<2>(viewTransition.at(v)) << moveGuard(agentIndex) << positionGuard << std::get<0>(viewTransition.at(v));
-
-        // os << actionName << std::get<2>(viewTransition.at(v)) << moveGuard(agentIndex) << " x" << agentName << "=" << c.second << " & y" << agentName << "=" << c.first << std::get<0>(viewTransition.at(v));
+        os << actionName << std::get<2>(viewTransition.at(v)) << moveGuard(agentIndex) << " x" << agentName << "=" << c.second << " & y" << agentName << "=" << c.first << std::get<0>(viewTransition.at(v));
         for (std::size_t i = 0; i < ALL_POSS_DIRECTIONS; i++) {
-          os << (i == 0 ? " -> " : " + ") << prob_piece_dir.at(i) << "/" << PROB_PIECES << " : " << positionTransition.at(i) << std::get<1>(viewTransition.at(v)) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
+          // os << (i == 0 ? " -> " : " + ") << prob_piece_dir_constants.at(i) << "/" << "total_prob" << " : " << positionTransition.at(i) << std::get<1>(viewTransition.at(v)) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
+          os << (i == 0 ? " -> " : " + ") << prob_piece_dir_constants.at(i) << " : " << positionTransition.at(i) << std::get<1>(viewTransition.at(v)) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
         }
     }
 
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printSlipperyMove(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation) {
+  std::ostream& PrismModulesPrinter::printSlipperyMove(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &c, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation) {
     constexpr std::size_t PROB_PIECES = 9, ALL_POSS_DIRECTIONS = 8;
 
     std::array<std::string, ALL_POSS_DIRECTIONS> positionTransition = {
@@ -794,13 +808,15 @@ namespace prism {
     std::string actionName, specialTransition; // if straight ahead is blocked
     std::string positionGuard;
     std::array<std::size_t, ALL_POSS_DIRECTIONS> prob_piece_dir; // { n, ne, w, se, s, sw, w, nw }
-
+    std::array<std::string, ALL_POSS_DIRECTIONS> prob_piece_dir_constants;
+    
     switch (orientation)
     {
       case SlipperyType::North:
         actionName = "\t[" + agentName + "move_on_slip_north]";
         positionGuard = "\t" + agentName + "IsOnSlipperyNorth";
         prob_piece_dir = { 0, 0, 1, 2, 0 /* <- R */, 2, 1, 0 };
+        prob_piece_dir_constants = { "prop_zero", "prop_zero", "prop_adj", "prop_neighbour", "prop_zero" /* <- R */, "prop_neighbour", "prop_adj", "prop_zero" };
         straightPosIndex = 4;
         specialTransition = "(y" + agentName + "'=y" + agentName + (!neighborhood.at(straightPosIndex) ? ")" : "+1)");
         break;
@@ -809,6 +825,7 @@ namespace prism {
         actionName = "\t[" + agentName + "move_on_slip_south]";
         positionGuard = "\t" + agentName + "IsOnSlipperySouth";
         prob_piece_dir = { 0 /* <- R */, 2, 1, 0, 0, 0, 1, 2 };
+        prob_piece_dir_constants = { "prop_zero" /* <- R */, "prop_neighbour", "prop_adj", "prop_zero", "prop_zero", "prop_zero", "prop_adj", "prop_neighbour" };
         straightPosIndex = 0; // always north
         specialTransition = "(y" + agentName + "'=y" + agentName + (!neighborhood.at(straightPosIndex) ? ")" : "-1)");
         break;
@@ -817,6 +834,7 @@ namespace prism {
         actionName = "\t[" + agentName + "move_on_slip_east]";
         positionGuard = "\t" + agentName + "IsOnSlipperyEast";
         prob_piece_dir = { 1, 0, 0, 0, 1, 2, 0 /* <- R */, 2 };
+        prob_piece_dir_constants = { "prop_adj", "prop_zero", "prop_zero", "prop_zero", "prop_adj", "prop_neighbour", "prop_zero" /* <- R */, "prop_neighbour" };
         straightPosIndex = 6;
         specialTransition = "(x" + agentName + "'=x" + agentName + (!neighborhood.at(straightPosIndex) ? ")" : "-1)");
         break;
@@ -825,6 +843,7 @@ namespace prism {
         actionName = "\t[" + agentName + "move_on_slip_west]";
         positionGuard = "\t" + agentName + "IsOnSlipperyWest";
         prob_piece_dir = { 1, 2, 0 /* <- R */, 2, 1, 0, 0, 0 };
+        prob_piece_dir_constants = {"prop_adj", "prop_neighbour", "prop_zero" /* <- R */, "prop_neighbour", "prop_adj", "prop_zero","prop_zero", "prop_zero" };
         straightPosIndex = 2;
         specialTransition = "(x" + agentName + "'=x" + agentName + (!neighborhood.at(straightPosIndex) ? ")" : "+1)");
         break;
@@ -842,9 +861,10 @@ namespace prism {
     // determine residual probability (R) by replacing 0 with (1 - overall sum)
     if(enforceOneWays) {
       prob_piece_dir = {0,0,0,0,0,0,0,0};
+      prob_piece_dir_constants = {"zero","zero","zero","zero","zero","zero","zero","zero"};
     }
     prob_piece_dir.at(straightPosIndex) = PROB_PIECES - std::accumulate(prob_piece_dir.begin(), prob_piece_dir.end(), 0);
-
+    prob_piece_dir_constants.at(straightPosIndex) = "prop_slippery_move_forward";
     // <DEBUG_AREA>
     {
       assert(prob_piece_dir.at(straightPosIndex) <= 9 && prob_piece_dir.at(straightPosIndex) >= 3 && "Value not in Range!");
@@ -862,10 +882,11 @@ namespace prism {
 
     // generic output (for every view and every possible view direction)
 
-    os << actionName << moveGuard(agentIndex) <<  positionGuard << " & " << agentName << "SlipperyMoveForwardAllowed ";
+   os << actionName << moveGuard(agentIndex) << " x" << agentName << "=" << c.second << " & y" << agentName << "=" << c.first << " & " << agentName << "SlipperyMoveForwardAllowed ";
 
     for (std::size_t i = 0; i < ALL_POSS_DIRECTIONS; i++) {
-      os << (i == 0 ? " -> " : " + ") << prob_piece_dir.at(i) << "/" << PROB_PIECES << " : " << positionTransition.at(i) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
+      os << (i == 0 ? " -> " : " + ") << prob_piece_dir_constants.at(i) << " : " << positionTransition.at(i) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
+      // os << (i == 0 ? " -> " : " + ") << prob_piece_dir_constants.at(i) << "/" << "total_prob" << " : " << positionTransition.at(i) << moveUpdate(agentIndex) << (i == ALL_POSS_DIRECTIONS - 1 ? ";\n" : "\n");
     }
 
     return os;

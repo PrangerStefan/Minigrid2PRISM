@@ -9,7 +9,8 @@
 enum class ConfigType : char {
   Label = 'L',
   Formula = 'F',
-  Module = 'M'
+  Module = 'M',
+  Constant = 'C'
 };
 
 struct Configuration
@@ -42,7 +43,19 @@ struct Configuration
   }
 };
 
+struct Constant {
+  private:
 
+  public:
+  std::string constant_;
+  std::string type_;
+  std::string value_;
+  bool overwrite_{false};
+
+  std::string createExpression() const;
+
+  friend std::ostream& operator <<(std::ostream &os, const Constant& constant);
+};
 
 struct Label {
   private:
@@ -116,6 +129,12 @@ template<>
 struct YAML::convert<Formula> {
   static YAML::Node encode(const Formula& rhs);
   static bool decode(const YAML::Node& node, Formula& rhs);
+};
+
+template<>
+struct YAML::convert<Constant> {
+  static YAML::Node encode(const Constant& rhs);
+  static bool decode(const YAML::Node& node, Constant& rhs);
 };
 
 

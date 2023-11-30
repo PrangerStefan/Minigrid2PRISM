@@ -16,6 +16,11 @@ std::ostream& operator << (std::ostream& os, const Action& action) {
     return os;
 }
 
+std::ostream& operator << (std::ostream& os, const Constant& constant) {
+    os << "const " << constant.type_ << " " << constant.constant_ << " = " << constant.value_;
+    return os;
+}
+
 std::ostream& operator << (std::ostream& os, const Module& module) {
     os << "Module: " << module.module_ << std::endl;
     for (auto& action : module.actions_) {
@@ -46,6 +51,14 @@ std::string Action::createExpression() const {
     }
     
     return "\t" + action_  + "\t" + guard_ + "-> " + update_+ Configuration::configuration_identifier_;
+}
+
+std::string Constant::createExpression() const {
+    if (overwrite_) {
+        return "const " + type_ + " " + constant_ +  " = " + value_  + Configuration::overwrite_identifier_;
+    }
+    
+    return "const " + type_ + " " + constant_ +  " = " + value_  + Configuration::configuration_identifier_;
 }
 
 YAML::Node YAML::convert<Module>::encode(const Module& rhs) {
@@ -145,6 +158,33 @@ bool YAML::convert<Formula>::decode(const YAML::Node& node, Formula& rhs) {
     return true;
 }
 
+YAML::Node YAML::convert<Constant>::encode(const Constant& rhs) {
+    YAML::Node node;
+
+    node.push_back(rhs.constant_);
+    node.push_back(rhs.value_);
+    node.push_back(rhs.type_);
+    node.push_back(rhs.overwrite_);
+
+    return node;
+}
+
+bool YAML::convert<Constant>::decode(const YAML::Node& node, Constant& rhs) {
+   if (!node.IsDefined() || !node.Type() == NodeType::Map || !node["constant"] || !node["type"] || !node["value"]) {
+      return false;
+    }
+
+    rhs.constant_ = node["constant"].as<std::string>();
+    rhs.type_ = node["type"].as<std::string>();
+    rhs.value_ = node["value"].as<std::string>();
+
+    if(node["overwrite"]) {
+      rhs.overwrite_ = node["overwrite"].as<bool>();
+    }
+
+    return true;
+}
+
 const std::string Configuration::configuration_identifier_ { "; // created through configuration"};
 const std::string Configuration::overwrite_identifier_{"; // Overwritten through configuration"};
 
@@ -156,6 +196,7 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             std::vector<Label> labels;
             std::vector<Formula> formulas;
             std::vector<Module> modules;
+            std::vector<Constant> constants;
 
             if (config["labels"]) {
                 labels = config["labels"].as<std::vector<Label>>();
@@ -165,6 +206,10 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             }
             if (config["modules"]) {
                 modules = config["modules"].as<std::vector<Module>>();
+            }
+
+            if (config["constants"]) {
+                constants = config["constants"].as<std::vector<Constant>>();
             }
         
             for (auto& label : labels) {
@@ -178,8 +223,10 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
                     configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_, action.index_});
                 }
             }
-
-
+            for (auto& constant : constants) {
+                // std::cout << constant.constant_ << std::endl;
+                configuration.push_back({constant.createExpression(), "const " + constant.type_ + " " + constant.constant_, ConfigType::Constant, constant.overwrite_});
+            }
         }
         catch(const std::exception& e) {
             std::cout << "Exception '" << typeid(e).name() << "' caught:" << std::endl;
