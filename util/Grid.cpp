@@ -244,10 +244,10 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     printer.printKeysLabels(os, agentNameAndPosition->first, keys);
   }
   std::vector<std::string> constants {"const double prop_zero = 0/9;", 
-                                      "const double prop_adj = 1/9;", 
+                                      "const double prop_next_neighbour = 1/9;", 
                                       "const double prop_slippery_move_forward = 3/9;",
                                       "const double prop_slippery_turn = 6/9;",
-                                      "const double prop_neighbour = 2/9;", 
+                                      "const double prop_direct_neighbour = 2/9;", 
                                       "const double total_prop = 9;"};
   printer.printConstants(os, constants);
 
