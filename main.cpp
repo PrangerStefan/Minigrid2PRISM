@@ -106,10 +106,11 @@ int main(int argc, char* argv[]) {
 
   std::fstream file {outputFilename->value(0), file.trunc | file.out};
   std::fstream infile {inputFilename->value(0), infile.in};
-  std::string line, content, background, rewards;
+  std::string line, content, background, rewards, properties;
   std::cout << "\n";
   bool parsingBackground = false;
   bool parsingStateRewards = false;
+  bool parsingEnvironmentProperties = false;
   while (std::getline(infile, line) && !line.empty()) {
     if(line.at(0) == '-' && line.at(line.size() - 1) == '-' && parsingBackground) {
       parsingStateRewards = true;
@@ -127,6 +128,12 @@ int main(int argc, char* argv[]) {
       background += line + "\n";
     } else if(parsingStateRewards) {
       rewards += line + "\n";
+    } else if (line.at(0) == '-' && line.at(line.size() - 1 ) == '-' && parsingStateRewards) {
+      parsingStateRewards = false;
+      parsingEnvironmentProperties = true;
+      continue;
+    } else if (parsingEnvironmentProperties) {
+      properties += line + "\n";
     }
   }
   std::cout << "\n";
