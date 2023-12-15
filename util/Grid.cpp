@@ -168,6 +168,10 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
       }
        else if (config.type_ == ConfigType::Constant) {
         start_pos = str.find(config.identifier_);
+
+        if (start_pos == std::string::npos) {
+          std::cout << "Couldn't find overwrite:" << config.expression_ << std::endl;
+        }
       }
 
       size_t end_pos = str.find(';', start_pos) + 1;
@@ -245,8 +249,9 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   }
   std::vector<std::string> constants {"const double prop_zero = 0/9;", 
                                       "const double prop_next_neighbour = 1/9;", 
-                                      "const double prop_slippery_move_forward = 3/9;",
+                                      "const double prop_slippery_move_forward = 7/9;",
                                       "const double prop_slippery_turn = 6/9;",
+                                      "const double prop_next_neighbour_turn = 1/9;",
                                       "const double prop_direct_neighbour = 2/9;", 
                                       "const double total_prop = 9;"};
   printer.printConstants(os, constants);
