@@ -249,8 +249,9 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   }
   std::vector<std::string> constants {"const double prop_zero = 0/9;", 
                                       "const double prop_intended = 6/9;", 
+                                      "const double prop_turn_intended = 6/9;", 
                                       "const double prop_displacement = 3/9;",
-                                      "const double prop_displacement_half = prop_discplacement * 1/2;", 
+                                      "const double prop_turn_displacement = 3/9;", 
                                       };
 
   printer.printConstants(os, constants);
