@@ -88,7 +88,7 @@ namespace prism {
                                 const bool agentWithView,
                                 const std::vector<float> &probabilities = {},
                                 const double faultyProbability = 0);
-      std::ostream& printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability = 1.0);
+      std::ostream& printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability = 1.0, const double &stickyProbability = 0.0);
       std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex);
       std::ostream& printEndmodule(std::ostream &os);
       std::ostream& printPlayerStruct(std::ostream &os, const AgentName &agentName, const bool agentWithView, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});

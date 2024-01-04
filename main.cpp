@@ -178,7 +178,6 @@ int main(int argc, char* argv[]) {
         auto end_pos = properties.find('\n', start_pos);
         auto value = properties.substr(start_pos + faultProbabilityIdentifier.length(), end_pos - start_pos - faultProbabilityIdentifier.length());
         faultyProbability = std::stod(value);
-        std::cout << "Probabilty" << faultyProbability << std::endl;
       }
     }
     if(ok) {

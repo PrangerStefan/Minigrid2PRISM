@@ -252,6 +252,8 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
                                       "const double prop_turn_intended = 6/9;", 
                                       "const double prop_displacement = 3/9;",
                                       "const double prop_turn_displacement = 3/9;", 
+                                      "const int width = " + std::to_string(maxBoundaries.first) + ";",
+                                      "const int height = " + std::to_string(maxBoundaries.second) + ";"
                                       };
 
   printer.printConstants(os, constants);
@@ -276,7 +278,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
     bool agentWithProbabilisticBehaviour = std::find(gridOptions.agentsWithProbabilisticBehaviour.begin(), gridOptions.agentsWithProbabilisticBehaviour.end(), agentName) != gridOptions.agentsWithProbabilisticBehaviour.end();
     std::set<std::string> slipperyActions; // TODO AGENT POSITION INITIALIZATIN
     if(agentWithProbabilisticBehaviour) printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
-    else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView);
+    else                                printer.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, {} ,faultyProbability);
     for(auto const& c : slipperyNorth) {
       printer.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
       if(!gridOptions.enforceOneWays) printer.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);

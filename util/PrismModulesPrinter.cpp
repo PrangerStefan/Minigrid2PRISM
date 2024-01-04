@@ -527,9 +527,16 @@ namespace prism {
     if(agentWithView) {
       os << "\tview" << agentName << " : [0..3];\n";
     os << "\n";
-    os << "\t[" << agentName << "_turn_right] " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery -> (view" << agentName << "'=mod(view" << agentName << " + 1, 4)) " << moveUpdate(agentIndex) << ";\n";
-    os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << ">0 -> (view" << agentName << "'=view" << agentName << " - 1) " << moveUpdate(agentIndex) << ";\n";
-    os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << "=0 -> (view" << agentName << "'=3) " << moveUpdate(agentIndex) << ";\n";
+    if (faultyProbability != 0.0) {
+      os << "\t[" << agentName << "_turn_right] " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery -> " << 100 - faultyProbability <<  "/100:" << "(view" << agentName << "'=mod(view" << agentName << " + 1, 4))" << moveUpdate(agentIndex) << "\n + " << faultyProbability <<  "/100:" << "(view" << agentName << "'=mod(view" << agentName << " + 2, 4))" << ";\n";
+      os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << ">1 -> " << 100 - faultyProbability <<  "/100:" << "(view" << agentName << "'=mod(view" << agentName << " - 1, 4))" << moveUpdate(agentIndex) << "\n + " << faultyProbability <<  "/100:" << "(view" << agentName << "'=mod(view" << agentName << " - 2, 4))" << ";\n"; 
+      os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << "=0 -> " << 100 - faultyProbability <<  "/100:" << "(view" << agentName << "'=3)" << moveUpdate(agentIndex) << "\n + " << faultyProbability <<  "/100:" << "(view" << agentName << "'=2)" << ";\n"; 
+      os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << "=1 -> " << 100 - faultyProbability <<  "/100:" << "(view" << agentName << "'=0)" << moveUpdate(agentIndex) << "\n + " << faultyProbability <<  "/100:" << "(view" << agentName << "'=3)" << ";\n"; 
+    } else {
+      os << "\t[" << agentName << "_turn_right] " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery -> (view" << agentName << "'=mod(view" << agentName << " + 1, 4)) " << moveUpdate(agentIndex) << ";\n";
+      os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << ">0 -> (view" << agentName << "'=view" << agentName << " - 1) " << moveUpdate(agentIndex) << ";\n";
+      os << "\t[" << agentName << "_turn_left]  " << moveGuard(agentIndex) << " !" << agentName << "CannotTurn & " << " !" << agentName << "IsFixed & " << " !" << agentName << "IsInGoal & !" << agentName << "IsInLava & !" << agentName << "IsOnSlippery & view" << agentName << "=0 -> (view" << agentName << "'=3) " << moveUpdate(agentIndex) << ";\n";
+    }
       if(enforceOneWays) {
         os << "\t[" << agentName << "_stuck]        !" << agentName << "IsFixed & " << agentName << "CannotTurn & view" << agentName << " = 0 & " << agentName << "CannotMoveEast -> true;\n";
         os << "\t[" << agentName << "_stuck]        !" << agentName << "IsFixed & " << agentName << "CannotTurn & view" << agentName << " = 1 & " << agentName << "CannotMoveSouth -> true;\n";
@@ -542,7 +549,8 @@ namespace prism {
     printActionsForKeys(os, agentName, keys);
     printActionsForBackground(os, agentName, backgroundTiles);
     os << "\n";
-    printMovementActions(os, agentName, agentIndex, agentWithView);
+
+    printMovementActions(os, agentName, agentIndex, agentWithView, 1.0, faultyProbability);
     for(auto const& probability : probabilities) {
       printMovementActions(os, agentName, agentIndex, agentWithView, probability);
     }
@@ -653,8 +661,14 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability) {
-    if(probability >= 1) {
+  std::ostream& PrismModulesPrinter::printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability, const double &stickyProbability) {                                                     
+    if(stickyProbability != 0.0) {
+      os << "\t[" << agentName << "_move_north]" << moveGuard(agentIndex) << viewVariable(agentName, 3, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveNorth -> " << (100 - stickyProbability) << "/100:" << "(y" << agentName << "'=y" << agentName << "-1)" << moveUpdate(agentIndex) << "\n+ " << (stickyProbability) << "/100:" << "(y" << agentName << "'=max(y" << agentName << "-2, 1 ))" << moveUpdate(agentIndex) << ";\n";
+      os << "\t[" << agentName << "_move_east] " << moveGuard(agentIndex) << viewVariable(agentName, 0, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveEast  -> " << (100 - stickyProbability) << "/100:" << "(x" << agentName << "'=x" << agentName << "+1)" << moveUpdate(agentIndex) << "\n+ " << (stickyProbability) << "/100:" << "(x" << agentName << "'=min(x" << agentName << "+2, width))" << moveUpdate(agentIndex) << ";\n";
+      os << "\t[" << agentName << "_move_south]" << moveGuard(agentIndex) << viewVariable(agentName, 1, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveSouth -> " << (100 - stickyProbability) << "/100:" << "(y" << agentName << "'=y" << agentName << "+1)" << moveUpdate(agentIndex) << "\n+ " << (stickyProbability) << "/100:" << "(y" << agentName << "'=min(y" << agentName << "+2, height))" << moveUpdate(agentIndex) << ";\n";
+      os << "\t[" << agentName << "_move_west] " << moveGuard(agentIndex) << viewVariable(agentName, 2, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveWest  -> " << (100 - stickyProbability) << "/100:" << "(x" << agentName << "'=x" << agentName << "-1)" << moveUpdate(agentIndex) << "\n+ " << (stickyProbability) << "/100:" << "(x" << agentName << "'=max(x" << agentName << "-1, 1))" << moveUpdate(agentIndex) << ";\n";
+    }
+    else if(probability >= 1) {
       os << "\t[" << agentName << "_move_north]" << moveGuard(agentIndex) << viewVariable(agentName, 3, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveNorth -> (y" << agentName << "'=y" << agentName << "-1)" << moveUpdate(agentIndex) << ";\n";
       os << "\t[" << agentName << "_move_east] " << moveGuard(agentIndex) << viewVariable(agentName, 0, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveEast  -> (x" << agentName << "'=x" << agentName << "+1)" << moveUpdate(agentIndex) << ";\n";
       os << "\t[" << agentName << "_move_south]" << moveGuard(agentIndex) << viewVariable(agentName, 1, agentWithView) << " !" << agentName << "IsFixed & " << " !" << agentName << "IsOnSlippery & !" << agentName << "IsInLava &!" << agentName << "IsInGoal &  !" << agentName << "CannotMoveSouth -> (y" << agentName << "'=y" << agentName << "+1)" << moveUpdate(agentIndex) << ";\n";
