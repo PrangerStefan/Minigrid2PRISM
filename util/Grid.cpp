@@ -12,8 +12,8 @@ prism::ModelType GridOptions::getModelType() const
   return prism::ModelType::MDP;
 }
 
-Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards)
-  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards)
+Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards, const double faultyProbability)
+  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
   maxBoundaries = std::make_pair(max.row - 1, max.column - 1);

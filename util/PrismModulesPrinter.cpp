@@ -515,7 +515,7 @@ namespace prism {
     return os;
   }
 
-  std::ostream& PrismModulesPrinter::printModule(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &boundaries, const coordinates& initialPosition, const cells &keys, const std::map<Color, cells> &backgroundTiles, const bool agentWithView, const std::vector<float> &probabilities) {
+  std::ostream& PrismModulesPrinter::printModule(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &boundaries, const coordinates& initialPosition, const cells &keys, const std::map<Color, cells> &backgroundTiles, const bool agentWithView, const std::vector<float> &probabilities, const double faultyProbability) {
     os << "module " << agentName << "\n";
     os << "\tx" << agentName << " : [1.." << boundaries.second  << "];\n";
     os << "\ty" << agentName << " : [1.." << boundaries.first << "];\n";
