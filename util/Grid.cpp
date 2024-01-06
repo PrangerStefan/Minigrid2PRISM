@@ -17,48 +17,23 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
   maxBoundaries = std::make_pair(max.row - 1, max.column - 1);
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(walls), [](cell c) {
-      return c.type == Type::Wall;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(lava), [](cell c) {
-      return c.type == Type::Lava;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(floor), [](cell c) {
-      return c.type == Type::Floor;
-  });
-  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorth), [](cell c) {
-      return c.type == Type::SlipperyNorth;
-  });
-  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast), [](cell c) {
-      return c.type == Type::SlipperyEast;
-  });
-  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) {
-      return c.type == Type::SlipperySouth;
-  });
-  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyWest), [](cell c) {
-      return c.type == Type::SlipperyWest;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(lockedDoors), [](cell c) {
-      return c.type == Type::LockedDoor;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(unlockedDoors), [](cell c) {
-    return c.type == Type::Door;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(goals), [](cell c) {
-      return c.type == Type::Goal;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(keys), [this](cell c) {    
-      return c.type == Type::Key;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(boxes), [](cell c) {
-      return c.type == Type::Box;
-  });
-  agent = *std::find_if(gridCells.begin(), gridCells.end(), [](cell c) {
-      return c.type == Type::Agent;
-  });
-  std::copy_if(gridCells.begin(), gridCells.end(), std::back_inserter(adversaries), [](cell c) {
-      return c.type == Type::Adversary;
-  });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(walls),         [](cell c) { return c.type == Type::Wall; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lava),          [](cell c) { return c.type == Type::Lava; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(floor),         [](cell c) { return c.type == Type::Floor; }); // TODO Add agent cells to floor
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorth), [](cell c) { return c.type == Type::SlipperyNorth; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast),  [](cell c) { return c.type == Type::SlipperyEast; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) { return c.type == Type::SlipperySouth; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyWest),  [](cell c) { return c.type == Type::SlipperyWest; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lockedDoors),   [](cell c) { return c.type == Type::LockedDoor; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(unlockedDoors), [](cell c) { return c.type == Type::Door; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(goals),         [](cell c) { return c.type == Type::Goal; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(keys),          [](cell c) { return c.type == Type::Key; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(boxes),         [](cell c) { return c.type == Type::Box; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(balls),         [](cell c) { return c.type == Type::Ball; });
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(adversaries),   [](cell c) { return c.type == Type::Adversary; });
+  agent = *std::find_if(gridCells.begin(), gridCells.end(), [](cell c) { return c.type == Type::Agent; });
+  floor.push_back(agent);
+
   agentNameAndPositionMap.insert({ "Agent", agent.getCoordinates() });
   for(auto const& adversary : adversaries) {
     std::string color = adversary.getColor();
@@ -66,6 +41,7 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
     try {
       if(gridOptions.agentsToBeConsidered.size() != 0 && std::find(gridOptions.agentsToBeConsidered.begin(), gridOptions.agentsToBeConsidered.end(), color) == gridOptions.agentsToBeConsidered.end()) continue;
       auto success = agentNameAndPositionMap.insert({ color, adversary.getCoordinates() });
+      floor.push_back(adversary);
       if(!success.second) {
         throw std::logic_error("Agent with " + color + " already present\n");
       }
