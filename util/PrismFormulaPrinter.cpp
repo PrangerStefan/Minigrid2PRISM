@@ -4,11 +4,6 @@
 #include <string>
 #include <algorithm>
 
-std::string capitalize(std::string string) {
-  string[0] = std::toupper(string[0]);
-  return string;
-}
-
 std::string vectorToDisjunction(const std::vector<std::string> &formulae) {
   bool first = true;
   std::string disjunction = "";

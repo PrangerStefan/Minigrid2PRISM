@@ -7,7 +7,6 @@
 #include "ConfigYaml.h"
 
 
-std::string capitalize(std::string string);
 std::string vectorToDisjunction(const std::vector<std::string> &formulae);
 std::string cellToConjunction(const AgentName &agentName, const cell &c);
 std::string coordinatesToConjunction(const AgentName &agentName, const coordinates &c, const ViewDirection viewDirection);
