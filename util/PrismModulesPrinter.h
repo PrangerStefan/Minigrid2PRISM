@@ -9,43 +9,25 @@
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(const ModelType &modelType, const size_t &numberOfPlayer, std::vector<Configuration> config ,const bool enforceOneWays = false);
+      PrismModulesPrinter(std::ostream &os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const bool enforceOneWays = false);
 
-      std::ostream& printRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &grid_cells, const cells& keys, const cells& doors);
-      std::ostream& printKeyRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &keys);
-      std::ostream& printDoorRestrictionFormula(std::ostream& os, const AgentName &agentName, const std::string &direction, const cells &doors);
-      std::ostream& printIsOnSlipperyFormula(std::ostream& os, const AgentName &agentName, const std::vector<std::reference_wrapper<cells>> &slipperyCollection, const cells &slipperyNorth, const cells &slipperyEast, const cells &slipperySouth, const cells &slipperyWest);
-      std::ostream& printGoalLabel(std::ostream& os, const AgentName&agentName, const cells &goals);
-      std::ostream& printCrashLabel(std::ostream &os, const std::vector<AgentName> agentNames);
-      std::ostream& printAvoidanceLabel(std::ostream &os, const std::vector<AgentName> agentNames, const int &distance);
-      std::ostream& printKeysLabels(std::ostream& os, const AgentName&agentName, const cells &keys);
-      std::ostream& printBackgroundLabels(std::ostream &os, const AgentName &agentName, const std::pair<Color, cells> &backgroundTiles);
-      std::ostream& printIsInLavaFormula(std::ostream& os, const AgentName &agentName, const cells &lava);
-      std::ostream& printIsFixedFormulas(std::ostream& os, const AgentName &agentName);
-      std::ostream& printTurningNotAllowedFormulas(std::ostream& os, const AgentName &agentName, const cells &floor);
-      std::ostream& printWallFormula(std::ostream& os, const AgentName &agentName, const cells &walls);
-      std::ostream& printFormulas(std::ostream& os,
-                                  const AgentName&agentName,
-                                  const cells &restrictionNorth,
-                                  const cells &restrictionEast,
-                                  const cells &restrictionSouth,
-                                  const cells &restrictionWest,
-                                  const std::vector<std::reference_wrapper<cells>> &slipperyCollection,
-                                  const cells &lava,
-                                  const cells &walls,
-                                  const cells &noTurnFloor,
-                                  const cells &slipperyNorth,
-                                  const cells &slipperyEast,
-                                  const cells &slipperySouth,
-                                  const cells &slipperyWest,
-                                  const cells &keys,
-                                  const cells &doors);
+      std::ostream& print();
 
-      std::ostream& printKeyModule(std::ostream &os, const cell &key, const coordinates &boundaries, AgentName agentName);
-      std::ostream& printKeyActions(std::ostream &os, const cell& key ,const std::string &keyIdentifier, AgentName agentName);
+      std::ostream& printModelType(const ModelType &modelType);
 
-      std::ostream& printDoorModule(std::ostream &os, const cell &door, const coordinates &boundaries, AgentName agentName);
-      std::ostream& printDoorActions(std::ostream &os, const cell &door ,const std::string &doorIdentifier, AgentName agentName);
+      void printPortableObjectModule(const cell &object);
+      void printPortableObjectActions(const std::string &agentName, const std::string &identifier);
+
+      void printDoorModule(const cell &object, const bool &opened);
+      void printLockedDoorActions(const std::string &agentName, const std::string &identifier);
+      void printUnlockedDoorActions(const std::string &agentName, const std::string &identifier);
+
+      void printRobotModule(const AgentName &agentName, const coordinates &initialPosition);
+      void printPortableObjectActionsForRobot(const std::string &agentName, const std::string &identifier);
+
+      void printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier);
+      void printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key);
+
       std::ostream& printConstants(std::ostream &os, const std::vector<std::string> &constants);
        /*
         * Representation for Slippery Tile.
@@ -72,7 +54,6 @@ namespace prism {
        */
       std::ostream& printSlipperyTurn(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &c, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation);
 
-      std::ostream& printModel(std::ostream &os, const ModelType &modelType);
       std::ostream& printBooleansForKeys(std::ostream &os, const AgentName &agentName, const cells &keys);
       std::ostream& printActionsForKeys(std::ostream &os, const AgentName &agentName, const cells &keys);
       std::ostream& printBooleansForBackground(std::ostream &os, const AgentName &agentName, const std::map<Color, cells> &backgroundTiles);
@@ -102,16 +83,25 @@ namespace prism {
       std::string pickupGuard(const AgentName &agentName, const std::string keyColor);
       std::string dropGuard(const AgentName &agentName, const std::string keyColor, size_t view);
       std::string moveUpdate(const size_t &agentIndex);
-      std::string unlockGuard(const AgentName &agentName, const cell& door);
-      std::string toggleGuard(const AgentName &agentName, const cell& door);
 
       std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView);
 
       bool isGame() const;
     private:
+      std::ostream &os;
+      std::stringstream actionStream;
 
       ModelType const& modelType;
-      const size_t numberOfPlayer;
+      coordinates const& maxBoundaries;
+      AgentName agentName;
+      cells boxes;
+      cells balls;
+      cells lockedDoors;
+      cells unlockedDoors;
+      cells keys;
+
+      AgentNameAndPositionMap agentNameAndPositionMap;
+      size_t numberOfPlayer;
       bool enforceOneWays;
       std::vector<Configuration> configuration;
       std::map<int, std::string> viewDirectionMapping;
