@@ -9,6 +9,17 @@ std::string capitalize(std::string string) {
   return string;
 }
 
+std::string vectorToDisjunction(const std::vector<std::string> &formulae) {
+  bool first = true;
+  std::string disjunction = "";
+  for(const auto &formula : formulae) {
+    if(first) first = false;
+    else disjunction += " | ";
+    disjunction += formula;
+  }
+  return disjunction;
+}
+
 std::string cellToConjunction(const AgentName &agentName, const cell &c) {
   return "x" + agentName + "=" + std::to_string(c.column) + "&y" + agentName + "=" + std::to_string(c.row);
 }
@@ -22,14 +33,19 @@ std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c) {
 }
 
 namespace prism {
-  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const AgentName &agentName, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys)
-    : os(os), agentName(agentName), restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys)
+  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const AgentName &agentName, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava)
+    : os(os), agentName(agentName), restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava)
   { }
 
   void PrismFormulaPrinter::printFormulas() {
     for(const auto& [direction, cells] : restrictions) {
       printRestrictionFormula(direction, cells);
     }
+
+    for(const auto& [direction, cells] : slipperyTiles) {
+      printIsOnFormula("Slippery", cells, direction);
+    }
+    printIsOnFormula("Lava", lava);
 
     for(const auto& ball : balls) {
       std::string color = capitalize(ball.getColor());
@@ -55,14 +71,23 @@ namespace prism {
       std::string color = capitalize(door.getColor());
       printRestrictionFormulaWithCondition(color + "Door", getSurroundingCells(door), "!" + color + "DoorOpened");
     }
+
+    if(conditionalMovementRestrictions.size() > 0) {
+      os << buildFormula("CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
+    }
   }
 
   void PrismFormulaPrinter::printRestrictionFormula(const std::string &direction, const cells &grid_cells) {
     os << buildFormula(agentName + "CannotMove" + direction + "Wall", buildDisjunction(agentName, grid_cells));
   }
 
+  void PrismFormulaPrinter::printIsOnFormula(const std::string &type, const cells &grid_cells, const std::string &direction) {
+    os << buildFormula(agentName + "IsOn" + type + direction, buildDisjunction(agentName, grid_cells));
+  }
+
   void PrismFormulaPrinter::printRestrictionFormulaWithCondition(const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition) {
     os << buildFormula(agentName + "CannotMove" + reason, "(" + buildDisjunction(agentName, coordinates) + ") & " + condition);
+    conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
   }
 
   std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula) {
@@ -70,6 +95,7 @@ namespace prism {
   }
 
   std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const std::map<ViewDirection, coordinates> &cells) {
+    if(cells.size() == 0) return "false";
     bool first = true;
     std::string disjunction = "";
     for(const auto [viewDirection, coordinates] : cells) {
@@ -81,6 +107,7 @@ namespace prism {
   }
 
   std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const cells &cells, const std::vector<std::string> &conditions) {
+    if(cells.size() == 0) return "false";
     bool first = true;
     std::string disjunction = "";
     if(!conditions.empty()) {
