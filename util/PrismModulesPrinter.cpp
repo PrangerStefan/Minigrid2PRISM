@@ -291,7 +291,7 @@ namespace prism {
 
     for(const auto &key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << "\tCarrying" << identifier << " : bool init false;\n";
+      os << "\t" << agentName << "Carrying" << identifier << " : bool init false;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
@@ -300,11 +300,11 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printPortableObjectActionsForRobot(const std::string &a, const std::string &i) {
-    actionStream << "\t[" << a << "_pickup_" << i << "] " << a << "CannotMove" << i << " -> (Carrying" << i << "'=true);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_north]\tCarrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_west] \tCarrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_south]\tCarrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_east] \tCarrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (Carrying" << i << "'=false);\n";
+    actionStream << "\t[" << a << "_pickup_" << i << "] " << a << "CannotMove" << i << " -> (" << a << "Carrying" << i << "'=true);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_north]\t" << a << "Carrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_west] \t" << a << "Carrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_south]\t" << a << "Carrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_east] \t" << a << "Carrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (" << a << "Carrying" << i << "'=false);\n";
     actionStream << "\n";
   }
 
@@ -315,8 +315,8 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key) {
-    actionStream << "\t[" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & Carrying" << key << " -> true;\n";
-    actionStream << "\t[" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"   << identifier << " & Carrying" << key << " -> true;\n";
+    actionStream << "\t[" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "\t[" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
     actionStream << "\n";
   }
 
