@@ -54,6 +54,7 @@ class cell {
 
     coordinates getCoordinates() const;
     std::string getColor() const;
+    std::string getType() const;
 
     int row;
     int column;

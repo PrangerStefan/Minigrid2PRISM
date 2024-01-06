@@ -69,6 +69,27 @@ std::string cell::getColor() const {
   }
 }
 
+std::string cell::getType() const {
+  switch(type) {
+    case Type::Wall:         return "Wall";
+    case Type::Floor:        return "Floor";
+    case Type::Door:         return "Door";
+    case Type::LockedDoor:    return "LockedDoor";
+    case Type::Key:          return "Key";
+    case Type::Ball:          return "Ball";
+    case Type::Box:           return "Box";
+    case Type::Goal:          return "Goal";
+    case Type::Lava:          return "Lava";
+    case Type::Agent:         return "Agent";
+    case Type::Adversary:     return "Adversary";
+    case Type::SlipperyNorth: return "SlipperyNorth";
+    case Type::SlipperySouth: return "SlipperySouth";
+    case Type::SlipperyEast:  return "SlipperyEast";
+    case Type::SlipperyWest:  return "SlipperyWest";
+    default: return "";
+  }
+}
+
 std::string getColor(Color color) {
   switch(color) {
     case Color::Red:    return "red";
