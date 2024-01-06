@@ -32,7 +32,7 @@ namespace prism {
     : os(os), agentName(agentName), restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava)
   { }
 
-  void PrismFormulaPrinter::printFormulas() {
+  void PrismFormulaPrinter::print() {
     for(const auto& [direction, cells] : restrictions) {
       printRestrictionFormula(direction, cells);
     }
@@ -58,17 +58,19 @@ namespace prism {
     }
 
     for(const auto& door : unlockedDoors) {
-      std::string color = capitalize(door.getColor());
-      printRestrictionFormulaWithCondition(color + "Door", getSurroundingCells(door), "!" + color + "DoorOpened");
+      std::string identifier = capitalize(door.getColor()) + door.getType();
+      printRestrictionFormulaWithCondition(identifier, getSurroundingCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(identifier, getSurroundingCells(door));
     }
 
     for(const auto& door : lockedDoors) {
-      std::string color = capitalize(door.getColor());
-      printRestrictionFormulaWithCondition(color + "Door", getSurroundingCells(door), "!" + color + "DoorOpened");
+      std::string identifier = capitalize(door.getColor()) + door.getType();
+      printRestrictionFormulaWithCondition(identifier, getSurroundingCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(identifier, getSurroundingCells(door));
     }
 
     if(conditionalMovementRestrictions.size() > 0) {
-      os << buildFormula("CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
+      os << buildFormula(agentName + "CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
     }
   }
 
@@ -78,6 +80,10 @@ namespace prism {
 
   void PrismFormulaPrinter::printIsOnFormula(const std::string &type, const cells &grid_cells, const std::string &direction) {
     os << buildFormula(agentName + "IsOn" + type + direction, buildDisjunction(agentName, grid_cells));
+  }
+
+  void PrismFormulaPrinter::printIsNextToFormula(const std::string &type, const std::map<ViewDirection, coordinates> &coordinates) {
+    os << buildFormula(agentName + "IsNextTo" + type, buildDisjunction(agentName, coordinates));
   }
 
   void PrismFormulaPrinter::printRestrictionFormulaWithCondition(const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition) {
