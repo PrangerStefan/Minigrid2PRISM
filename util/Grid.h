@@ -7,6 +7,7 @@
 
 #include "MinigridGrammar.h"
 #include "PrismModulesPrinter.h"
+#include "PrismFormulaPrinter.h"
 #include "ConfigYaml.h"
 
 struct GridOptions {
@@ -59,6 +60,7 @@ class Grid {
     cells lockedDoors;
     cells unlockedDoors;
     cells boxes;
+    cells balls;
     cells lava;
 
     cells goals;
