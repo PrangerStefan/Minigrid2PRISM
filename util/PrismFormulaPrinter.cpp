@@ -4,6 +4,10 @@
 #include <string>
 #include <algorithm>
 
+std::string oneOffToString(const int &offset) {
+  return offset != 0 ? ( offset == 1 ? "+1" : "-1" )  : "";
+}
+
 std::string vectorToDisjunction(const std::vector<std::string> &formulae) {
   bool first = true;
   std::string disjunction = "";
@@ -23,8 +27,18 @@ std::string coordinatesToConjunction(const AgentName &agentName, const coordinat
   return "x" + agentName + "=" + std::to_string(c.first) + "&y" + agentName + "=" + std::to_string(c.second) + "&view" + agentName + "=" + std::to_string(viewDirection);
 }
 
+std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition, const ViewDirection viewDirection) {
+  std::string xOffset = oneOffToString(relativePosition.first);
+  std::string yOffset = oneOffToString(relativePosition.second);
+  return "x" + agentName + xOffset + "=x" + identifier + "&y" + agentName + yOffset + "=y" + identifier + "&view" + agentName + "=" + std::to_string(viewDirection);
+}
+
 std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c) {
   return {{1, c.getNorth()}, {2, c.getEast()}, {3, c.getSouth()}, {0, c.getWest()}};
+}
+
+std::map<ViewDirection, std::pair<int, int>> getRelativeSurroundingCells() {
+  return { {1, {0,+1}}, {2, {-1,0}}, {3, {0,-1}}, {0, {+1,0}} };
 }
 
 namespace prism {
@@ -47,19 +61,24 @@ namespace prism {
 
     for(const auto& ball : balls) {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(ball), "!" + identifier + "PickedUp");
+      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
+      for(auto const c : getSurroundingCells(ball)) {
+        std::cout << ball << std::endl;
+        std::cout << "dir:" << c.first << " column" << c.second.first << " row" << c.second.second << std::endl;
+
+      }
     }
 
     for(const auto& box : boxes) {
       std::string identifier = capitalize(box.getColor()) + box.getType();
-      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(box), "!" + identifier + "PickedUp");
+      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
     for(const auto& key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(key), "!" + identifier + "PickedUp");
+      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
@@ -98,6 +117,11 @@ namespace prism {
     conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
   }
 
+  void PrismFormulaPrinter::printRelativeRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition) {
+    os << buildFormula(agentName + "CannotMove" + reason, "(" + buildDisjunction(agentName, reason) + ") & " + condition);
+    conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
+  }
+
   std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula) {
     return "formula " + formulaName + " = " + formula + ";\n";
   }
@@ -131,6 +155,17 @@ namespace prism {
         else disjunction += " | ";
         disjunction += "(" + cellToConjunction(agentName, cell) + ")";
       }
+    }
+    return disjunction;
+  }
+
+  std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const std::string &reason) {
+    std::string disjunction = "";
+    bool first = true;
+    for(auto const [viewDirection, relativePosition] : getRelativeSurroundingCells()) {
+      if(first) first = false;
+      else disjunction += " | ";
+      disjunction += "(" + objectPositionToConjunction(agentName, reason, relativePosition, viewDirection) + ")";
     }
     return disjunction;
   }
