@@ -4,8 +4,12 @@
 
 std::ostream &operator<<(std::ostream &os, const cell &c) {
   os << static_cast<char>(c.type) << static_cast<char>(c.color);
-  os <<  " at (" << c.row << "," << c.column << ")";
+  os <<  " at (" << c.column << "," << c.row << ")";
   return os;
+}
+
+coordinates cell::getCoordinates() const {
+  return std::make_pair(column, row);
 }
 
 cell cell::getNorth(const std::vector<cell> &grid) const {
@@ -50,10 +54,6 @@ cell cell::getWest(const std::vector<cell> &grid) const {
     std::exit(EXIT_FAILURE);
   }
   return *west;
-}
-
-coordinates cell::getCoordinates() const {
-  return std::make_pair(row, column);
 }
 
 std::string cell::getColor() const {

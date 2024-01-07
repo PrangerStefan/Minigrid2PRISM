@@ -89,43 +89,16 @@ cells Grid::getGridCells() {
 }
 
 bool Grid::isBlocked(coordinates p) {
-  return isWall(p); //|| isLockedDoor(p) || isKey(p);
+  return isWall(p);
 }
 
 bool Grid::isWall(coordinates p) {
   return std::find_if(walls.begin(), walls.end(),
       [p](cell cell) {
-        return cell.row == p.first && cell.column == p.second;
+        return cell.row == p.second && cell.column == p.first;
       }) != walls.end();
 }
 
-bool Grid::isLockedDoor(coordinates p) {
-  return std::find_if(lockedDoors.begin(), lockedDoors.end(),
-      [p](cell cell) {
-        return cell.row == p.first && cell.column == p.second;
-      }) != lockedDoors.end();
-}
-
-bool Grid::isUnlockedDoor(coordinates p) {
-  return std::find_if(unlockedDoors.begin(), unlockedDoors.end(),
-      [p](cell cell) {
-        return cell.row == p.first && cell.column == p.second;
-      }) != unlockedDoors.end();
-}
-
-bool Grid::isKey(coordinates p) {
-  return std::find_if(keys.begin(), keys.end(),
-      [p](cell cell) {
-        return cell.row == p.first && cell.column == p.second;
-      }) != keys.end();
-}
-
-bool Grid::isBox(coordinates p) {
-  return std::find_if(boxes.begin(), boxes.end(),
-      [p](cell cell) {
-        return cell.row == p.first && cell.column == p.second;
-      }) != boxes.end();
-}
 
 void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configuration) {
   for (auto& config : configuration) {
