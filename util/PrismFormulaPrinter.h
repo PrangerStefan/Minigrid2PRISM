@@ -10,10 +10,13 @@
 std::string oneOffToString(const int &offset);
 std::string vectorToDisjunction(const std::vector<std::string> &formulae);
 std::string cellToConjunction(const AgentName &agentName, const cell &c);
+std::string cellToConjunctionWithOffset(const AgentName &agentName, const cell &c, const std::string &xOffset, const std::string &yOffset);
 std::string coordinatesToConjunction(const AgentName &agentName, const coordinates &c, const ViewDirection viewDirection);
+std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition);
 std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition, const ViewDirection viewDirection);
 std::map<ViewDirection, coordinates> getAdjacentCells(const cell &c);
 std::map<ViewDirection, std::pair<int, int>> getRelativeAdjacentCells();
+std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells();
 
 namespace prism {
   class PrismFormulaPrinter {
@@ -27,12 +30,18 @@ namespace prism {
       void printIsNextToFormula(const AgentName &agentName, const std::string &type, const std::map<ViewDirection, coordinates> &coordinates);
       void printRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition);
       void printRelativeRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition);
+      void printSlipRestrictionFormula(const AgentName &agentName, const std::string &direction);
     private:
-      std::string buildFormula(const std::string &formulaName, const std::string &formula);
+      std::string buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon = true);
       std::string buildLabel(const std::string &labelName, const std::string &label);
       std::string buildDisjunction(const AgentName &agentName, const std::map<ViewDirection, coordinates> &cells);
-      std::string buildDisjunction(const AgentName &agentName, const cells &cells, const std::vector<std::string> &conditions = {});
+      std::string buildDisjunction(const AgentName &agentName, const cells &cells);
       std::string buildDisjunction(const AgentName &agentName, const std::string &reason);
+      std::string buildDisjunction(const AgentName &agentName, const cells &cells, const std::pair<int, int> &offset);
+
+      bool slipperyBehaviour() const;
+      bool anyPortableObject() const;
+
 
       std::ostream &os;
       std::map<std::string, cells> restrictions;

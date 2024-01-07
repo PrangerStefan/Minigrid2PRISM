@@ -23,10 +23,19 @@ std::string cellToConjunction(const AgentName &agentName, const cell &c) {
   return "x" + agentName + "=" + std::to_string(c.column) + "&y" + agentName + "=" + std::to_string(c.row);
 }
 
+std::string cellToConjunctionWithOffset(const AgentName &agentName, const cell &c, const std::string &xOffset, const std::string &yOffset){
+  return "x" + agentName + xOffset + "=" + std::to_string(c.column) + "&y" + agentName + yOffset + "=" + std::to_string(c.row);
+}
+
 std::string coordinatesToConjunction(const AgentName &agentName, const coordinates &c, const ViewDirection viewDirection) {
   return "x" + agentName + "=" + std::to_string(c.first) + "&y" + agentName + "=" + std::to_string(c.second) + "&view" + agentName + "=" + std::to_string(viewDirection);
 }
 
+std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition) {
+  std::string xOffset = oneOffToString(relativePosition.first);
+  std::string yOffset = oneOffToString(relativePosition.second);
+  return "x" + agentName + xOffset + "=x" + identifier + "&y" + agentName + yOffset + "=y" + identifier;
+}
 std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition, const ViewDirection viewDirection) {
   std::string xOffset = oneOffToString(relativePosition.first);
   std::string yOffset = oneOffToString(relativePosition.second);
@@ -41,6 +50,11 @@ std::map<ViewDirection, std::pair<int, int>> getRelativeAdjacentCells() {
   return { {1, {0,+1}}, {2, {-1,0}}, {3, {0,-1}}, {0, {+1,0}} };
 }
 
+std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells() {
+  return { {"NorthWest", {-1,-1}}, {"North", { 0,-1}}, {"NorthEast", {+1,-1}},
+           {"West",      {-1, 0}},                     {"East",      {+1, 0}},
+           {"SouthWest", {-1,+1}}, {"South", { 0,+1}}, {"SouthEast", {+1,+1}} };
+}
 
 namespace prism {
   PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals)
@@ -52,11 +66,17 @@ namespace prism {
       printRestrictionFormula(agentName, direction, cells);
     }
 
-    for(const auto& [direction, cells] : slipperyTiles) {
-      printIsOnFormula(agentName, "Slippery", cells, direction);
+    if(slipperyBehaviour()) {
+      for(const auto& [direction, cells] : slipperyTiles) {
+        printIsOnFormula(agentName, "Slippery", cells, direction);
+      }
+      std::vector<std::string> allSlipperyDirections = {agentName + "IsOnSlipperyNorth", agentName + "IsOnSlipperyEast", agentName + "IsOnSlipperySouth", agentName + "IsOnSlipperyWest"};
+      os << buildFormula(agentName + "IsOnSlippery", vectorToDisjunction(allSlipperyDirections));
+
+      for(const auto& [direction, relativePosition] : getRelativeSurroundingCells()) {
+        printSlipRestrictionFormula(agentName, direction);
+      }
     }
-    std::vector<std::string> allSlipperyDirections = {agentName + "IsOnSlipperyNorth", agentName + "IsOnSlipperyEast", agentName + "IsOnSlipperySouth", agentName + "IsOnSlipperyWest"};
-    os << buildFormula(agentName + "IsOnSlippery", vectorToDisjunction(allSlipperyDirections));
     printIsOnFormula(agentName, "Lava", lava);
     printIsOnFormula(agentName, "Goal", goals);
 
@@ -64,11 +84,6 @@ namespace prism {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
       printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
-      for(auto const c : getAdjacentCells(ball)) {
-        std::cout << ball << std::endl;
-        std::cout << "dir:" << c.first << " column" << c.second.first << " row" << c.second.second << std::endl;
-
-      }
     }
 
     for(const auto& box : boxes) {
@@ -123,8 +138,27 @@ namespace prism {
     conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
   }
 
-  std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula) {
-    return "formula " + formulaName + " = " + formula + ";\n";
+  void PrismFormulaPrinter::printSlipRestrictionFormula(const AgentName &agentName, const std::string &direction) {
+    std::pair<int, int> slipCell = getRelativeSurroundingCells().at(direction);
+    bool semicolon = anyPortableObject() ? false : true;
+    os << buildFormula(agentName + "CannotSlip" + direction, buildDisjunction(agentName, walls, slipCell), semicolon);
+    for(auto const key : keys) {
+      std::string identifier = capitalize(key.getColor()) + key.getType();
+      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
+    }
+    for(auto const ball : balls) {
+      std::string identifier = capitalize(ball.getColor()) + ball.getType();
+      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
+    }
+    for(auto const box : boxes) {
+      std::string identifier = capitalize(box.getColor()) + box.getType();
+      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
+    }
+    os << ";\n";
+  }
+
+  std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon) {
+    return "formula " + formulaName + " = " + formula + (semicolon ? ";\n": "");
   }
 
   std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const std::map<ViewDirection, coordinates> &cells) {
@@ -139,23 +173,14 @@ namespace prism {
     return disjunction;
   }
 
-  std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const cells &cells, const std::vector<std::string> &conditions) {
+  std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const cells &cells) {
     if(cells.size() == 0) return "false";
     bool first = true;
     std::string disjunction = "";
-    if(!conditions.empty()) {
-      for(uint index = 0; index < cells.size(); index++) {
-        if(first) first = false;
-        else disjunction += " | ";
-        disjunction += "(" + cellToConjunction(agentName, cells.at(index)) + "&" + conditions.at(index) + ")";
-      }
-
-    } else {
-      for(auto const cell : cells) {
-        if(first) first = false;
-        else disjunction += " | ";
-        disjunction += "(" + cellToConjunction(agentName, cell) + ")";
-      }
+    for(auto const cell : cells) {
+      if(first) first = false;
+      else disjunction += " | ";
+      disjunction += "(" + cellToConjunction(agentName, cell) + ")";
     }
     return disjunction;
   }
@@ -169,5 +194,25 @@ namespace prism {
       disjunction += "(" + objectPositionToConjunction(agentName, reason, relativePosition, viewDirection) + ")";
     }
     return disjunction;
+  }
+
+  std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const cells &cells, const std::pair<int, int> &offset) {
+    std::string disjunction = "";
+    bool first = true;
+    std::string xOffset = oneOffToString(offset.first);
+    std::string yOffset = oneOffToString(offset.second);
+    for(auto const cell : cells) {
+      if(first) first = false;
+      else disjunction += " | ";
+      disjunction += "(" + cellToConjunctionWithOffset(agentName, cell, xOffset, yOffset) + ")";
+    }
+    return disjunction;
+  }
+
+  bool PrismFormulaPrinter::slipperyBehaviour() const {
+    return !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
+  }
+  bool PrismFormulaPrinter::anyPortableObject() const {
+    return !keys.empty() || !boxes.empty() || !balls.empty();
   }
 }
