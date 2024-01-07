@@ -28,65 +28,72 @@ std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c) {
 }
 
 namespace prism {
-  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const AgentName &agentName, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava)
-    : os(os), agentName(agentName), restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava)
+  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals)
+    : os(os),  restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals)
   { }
 
-  void PrismFormulaPrinter::print() {
+  void PrismFormulaPrinter::print(const AgentName &agentName) {
     for(const auto& [direction, cells] : restrictions) {
-      printRestrictionFormula(direction, cells);
+      printRestrictionFormula(agentName, direction, cells);
     }
 
     for(const auto& [direction, cells] : slipperyTiles) {
-      printIsOnFormula("Slippery", cells, direction);
+      printIsOnFormula(agentName, "Slippery", cells, direction);
     }
-    printIsOnFormula("Lava", lava);
+    std::vector<std::string> allSlipperyDirections = {agentName + "IsOnSlipperyNorth", agentName + "IsOnSlipperyEast", agentName + "IsOnSlipperySouth", agentName + "IsOnSlipperyWest"};
+    os << buildFormula(agentName + "IsOnSlippery", vectorToDisjunction(allSlipperyDirections));
+    printIsOnFormula(agentName, "Lava", lava);
+    printIsOnFormula(agentName, "Goal", goals);
 
     for(const auto& ball : balls) {
-      std::string color = capitalize(ball.getColor());
-      printRestrictionFormulaWithCondition(color + "Ball", getSurroundingCells(ball), "!" + color + "BallPickedUp");
+      std::string identifier = capitalize(ball.getColor()) + ball.getType();
+      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(ball), "!" + identifier + "PickedUp");
+      portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
     for(const auto& box : boxes) {
-      std::string color = capitalize(box.getColor());
-      printRestrictionFormulaWithCondition(color + "Box", getSurroundingCells(box), "!" + color + "BoxPickedUp");
+      std::string identifier = capitalize(box.getColor()) + box.getType();
+      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(box), "!" + identifier + "PickedUp");
+      portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
     for(const auto& key : keys) {
-      std::string color = capitalize(key.getColor());
-      printRestrictionFormulaWithCondition(color + "Key", getSurroundingCells(key), "!" + color + "KeyPickedUp");
+      std::string identifier = capitalize(key.getColor()) + key.getType();
+      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(key), "!" + identifier + "PickedUp");
+      portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
     for(const auto& door : unlockedDoors) {
       std::string identifier = capitalize(door.getColor()) + door.getType();
-      printRestrictionFormulaWithCondition(identifier, getSurroundingCells(door), "!" + identifier + "Open");
-      printIsNextToFormula(identifier, getSurroundingCells(door));
+      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(agentName, identifier, getSurroundingCells(door));
     }
 
     for(const auto& door : lockedDoors) {
       std::string identifier = capitalize(door.getColor()) + door.getType();
-      printRestrictionFormulaWithCondition(identifier, getSurroundingCells(door), "!" + identifier + "Open");
-      printIsNextToFormula(identifier, getSurroundingCells(door));
+      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(agentName, identifier, getSurroundingCells(door));
     }
 
     if(conditionalMovementRestrictions.size() > 0) {
       os << buildFormula(agentName + "CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
+      os << buildFormula(agentName + "IsCarrying", vectorToDisjunction(portableObjects));
     }
   }
 
-  void PrismFormulaPrinter::printRestrictionFormula(const std::string &direction, const cells &grid_cells) {
+  void PrismFormulaPrinter::printRestrictionFormula(const AgentName &agentName, const std::string &direction, const cells &grid_cells) {
     os << buildFormula(agentName + "CannotMove" + direction + "Wall", buildDisjunction(agentName, grid_cells));
   }
 
-  void PrismFormulaPrinter::printIsOnFormula(const std::string &type, const cells &grid_cells, const std::string &direction) {
+  void PrismFormulaPrinter::printIsOnFormula(const AgentName &agentName, const std::string &type, const cells &grid_cells, const std::string &direction) {
     os << buildFormula(agentName + "IsOn" + type + direction, buildDisjunction(agentName, grid_cells));
   }
 
-  void PrismFormulaPrinter::printIsNextToFormula(const std::string &type, const std::map<ViewDirection, coordinates> &coordinates) {
+  void PrismFormulaPrinter::printIsNextToFormula(const AgentName &agentName, const std::string &type, const std::map<ViewDirection, coordinates> &coordinates) {
     os << buildFormula(agentName + "IsNextTo" + type, buildDisjunction(agentName, coordinates));
   }
 
-  void PrismFormulaPrinter::printRestrictionFormulaWithCondition(const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition) {
+  void PrismFormulaPrinter::printRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition) {
     os << buildFormula(agentName + "CannotMove" + reason, "(" + buildDisjunction(agentName, coordinates) + ") & " + condition);
     conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
   }

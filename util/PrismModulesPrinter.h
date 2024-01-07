@@ -9,7 +9,7 @@
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(std::ostream &os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const bool enforceOneWays = false);
+      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float &faultyProbability);
 
       std::ostream& print();
 
@@ -27,6 +27,9 @@ namespace prism {
 
       void printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier);
       void printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key);
+
+      void printMovementActionsForRobot(const std::string &a);
+      void printTurningActionsForRobot(const std::string &a);
 
       std::ostream& printConstants(std::ostream &os, const std::vector<std::string> &constants);
        /*
@@ -70,7 +73,7 @@ namespace prism {
                                 const std::vector<float> &probabilities = {},
                                 const double faultyProbability = 0);
       std::ostream& printMovementActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const bool agentWithView, const float &probability = 1.0, const double &stickyProbability = 0.0);
-      std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName, const size_t &agentIndex);
+      std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName);
       std::ostream& printEndmodule(std::ostream &os);
       std::ostream& printPlayerStruct(std::ostream &os, const AgentName &agentName, const bool agentWithView, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});
       std::ostream& printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer);
@@ -79,20 +82,24 @@ namespace prism {
       std::ostream& printConfiguration(std::ostream &os, const std::vector<Configuration>& configurations);
       std::ostream& printConfiguredActions(std::ostream &os, const AgentName &agentName);
 
-      std::string moveGuard(const size_t &agentIndex);
+      std::string moveGuard(const AgentName &agentName);
       std::string pickupGuard(const AgentName &agentName, const std::string keyColor);
       std::string dropGuard(const AgentName &agentName, const std::string keyColor, size_t view);
-      std::string moveUpdate(const size_t &agentIndex);
+      std::string moveUpdate(const AgentName &agentName);
 
-      std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView);
+      std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView = true);
 
       bool isGame() const;
     private:
+      std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection);
+      std::string printMovementUpdate(const AgentName &a, const std::string &update);
+
+
       std::ostream &os;
       std::stringstream actionStream;
 
-      ModelType const& modelType;
-      coordinates const& maxBoundaries;
+      ModelType const &modelType;
+      coordinates const &maxBoundaries;
       AgentName agentName;
       cells boxes;
       cells balls;
@@ -101,8 +108,9 @@ namespace prism {
       cells keys;
 
       AgentNameAndPositionMap agentNameAndPositionMap;
+      std::map<AgentName, size_t> agentIndexMap;
       size_t numberOfPlayer;
-      bool enforceOneWays;
+      float const &faultyProbability;
       std::vector<Configuration> configuration;
       std::map<int, std::string> viewDirectionMapping;
   };

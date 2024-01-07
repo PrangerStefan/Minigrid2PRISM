@@ -15,14 +15,14 @@ std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c);
 namespace prism {
   class PrismFormulaPrinter {
     public:
-      PrismFormulaPrinter(std::ostream &os, const AgentName &agentName, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava);
+      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals);
 
-      void print();
+      void print(const AgentName &agentName);
 
-      void printRestrictionFormula(const std::string &direction, const cells &grid_cells);
-      void printIsOnFormula(const std::string &type, const cells &grid_cells, const std::string &direction = "");
-      void printIsNextToFormula(const std::string &type, const std::map<ViewDirection, coordinates> &coordinates);
-      void printRestrictionFormulaWithCondition(const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition);
+      void printRestrictionFormula(const AgentName &agentName, const std::string &direction, const cells &grid_cells);
+      void printIsOnFormula(const AgentName &agentName, const std::string &type, const cells &grid_cells, const std::string &direction = "");
+      void printIsNextToFormula(const AgentName &agentName, const std::string &type, const std::map<ViewDirection, coordinates> &coordinates);
+      void printRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition);
     private:
       std::string buildFormula(const std::string &formulaName, const std::string &formula);
       std::string buildLabel(const std::string &labelName, const std::string &label);
@@ -30,7 +30,6 @@ namespace prism {
       std::string buildDisjunction(const AgentName &agentName, const cells &cells, const std::vector<std::string> &conditions = {});
 
       std::ostream &os;
-      AgentName agentName; // move this to functions
       std::map<std::string, cells> restrictions;
       cells boxes;
       cells balls;
@@ -39,7 +38,9 @@ namespace prism {
       cells keys;
       std::map<std::string, cells> slipperyTiles;
       cells lava;
+      cells goals;
 
       std::vector<std::string> conditionalMovementRestrictions;
+      std::vector<std::string> portableObjects;
   };
 }
