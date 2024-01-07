@@ -33,17 +33,18 @@ std::string objectPositionToConjunction(const AgentName &agentName, const std::s
   return "x" + agentName + xOffset + "=x" + identifier + "&y" + agentName + yOffset + "=y" + identifier + "&view" + agentName + "=" + std::to_string(viewDirection);
 }
 
-std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c) {
+std::map<ViewDirection, coordinates> getAdjacentCells(const cell &c) {
   return {{1, c.getNorth()}, {2, c.getEast()}, {3, c.getSouth()}, {0, c.getWest()}};
 }
 
-std::map<ViewDirection, std::pair<int, int>> getRelativeSurroundingCells() {
+std::map<ViewDirection, std::pair<int, int>> getRelativeAdjacentCells() {
   return { {1, {0,+1}}, {2, {-1,0}}, {3, {0,-1}}, {0, {+1,0}} };
 }
 
+
 namespace prism {
-  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals)
-    : os(os),  restrictions(restrictions), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals)
+  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals)
+    : os(os),  restrictions(restrictions), walls(walls), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals)
   { }
 
   void PrismFormulaPrinter::print(const AgentName &agentName) {
@@ -63,7 +64,7 @@ namespace prism {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
       printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
-      for(auto const c : getSurroundingCells(ball)) {
+      for(auto const c : getAdjacentCells(ball)) {
         std::cout << ball << std::endl;
         std::cout << "dir:" << c.first << " column" << c.second.first << " row" << c.second.second << std::endl;
 
@@ -84,14 +85,14 @@ namespace prism {
 
     for(const auto& door : unlockedDoors) {
       std::string identifier = capitalize(door.getColor()) + door.getType();
-      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(door), "!" + identifier + "Open");
-      printIsNextToFormula(agentName, identifier, getSurroundingCells(door));
+      printRestrictionFormulaWithCondition(agentName, identifier, getAdjacentCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(agentName, identifier, getAdjacentCells(door));
     }
 
     for(const auto& door : lockedDoors) {
       std::string identifier = capitalize(door.getColor()) + door.getType();
-      printRestrictionFormulaWithCondition(agentName, identifier, getSurroundingCells(door), "!" + identifier + "Open");
-      printIsNextToFormula(agentName, identifier, getSurroundingCells(door));
+      printRestrictionFormulaWithCondition(agentName, identifier, getAdjacentCells(door), "!" + identifier + "Open");
+      printIsNextToFormula(agentName, identifier, getAdjacentCells(door));
     }
 
     if(conditionalMovementRestrictions.size() > 0) {
@@ -162,7 +163,7 @@ namespace prism {
   std::string PrismFormulaPrinter::buildDisjunction(const AgentName &agentName, const std::string &reason) {
     std::string disjunction = "";
     bool first = true;
-    for(auto const [viewDirection, relativePosition] : getRelativeSurroundingCells()) {
+    for(auto const [viewDirection, relativePosition] : getRelativeAdjacentCells()) {
       if(first) first = false;
       else disjunction += " | ";
       disjunction += "(" + objectPositionToConjunction(agentName, reason, relativePosition, viewDirection) + ")";

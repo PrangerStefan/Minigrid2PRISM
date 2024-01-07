@@ -158,7 +158,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
                  [](const std::map<AgentNameAndPosition::first_type,AgentNameAndPosition::second_type>::value_type &pair){return pair.first;});
   std::string agentName = agentNames.at(0);
 
-  prism::PrismFormulaPrinter formulas(os, wallRestrictions, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals);
+  prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals);
   prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, faultyProbability);
 
   modules.printModelType(modelType);

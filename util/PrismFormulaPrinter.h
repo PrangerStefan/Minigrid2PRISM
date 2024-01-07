@@ -12,13 +12,13 @@ std::string vectorToDisjunction(const std::vector<std::string> &formulae);
 std::string cellToConjunction(const AgentName &agentName, const cell &c);
 std::string coordinatesToConjunction(const AgentName &agentName, const coordinates &c, const ViewDirection viewDirection);
 std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition, const ViewDirection viewDirection);
-std::map<ViewDirection, coordinates> getSurroundingCells(const cell &c);
-std::map<ViewDirection, std::pair<int, int>> getRelativeSurroundingCells();
+std::map<ViewDirection, coordinates> getAdjacentCells(const cell &c);
+std::map<ViewDirection, std::pair<int, int>> getRelativeAdjacentCells();
 
 namespace prism {
   class PrismFormulaPrinter {
     public:
-      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals);
+      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals);
 
       void print(const AgentName &agentName);
 
@@ -36,6 +36,7 @@ namespace prism {
 
       std::ostream &os;
       std::map<std::string, cells> restrictions;
+      cells walls;
       cells boxes;
       cells balls;
       cells lockedDoors;
