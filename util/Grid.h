@@ -65,5 +65,5 @@ class Grid {
     std::map<Color, cells> backgroundTiles;
 
     std::map<coordinates, float> stateRewards;
-    float faultyProbability;
+    const float faultyProbability;
 };
