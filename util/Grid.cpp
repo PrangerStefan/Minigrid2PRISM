@@ -141,7 +141,6 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   walkable.insert(walkable.end(), balls.begin(), balls.end());
 
   for(auto const& c : walkable) {
-    std::cout << "checking: " << c << " south of c: " << c.getSouth().first << " " << c.getSouth().second << std::endl;
     if(isWall(c.getNorth())) northRestriction.push_back(c);
     if(isWall(c.getEast()))   eastRestriction.push_back(c);
     if(isWall(c.getSouth())) southRestriction.push_back(c);
