@@ -12,6 +12,9 @@ typedef AgentNameAndPosition KeyNameAndPosition;
 typedef std::map<AgentNameAndPosition::first_type, AgentNameAndPosition::second_type> AgentNameAndPositionMap;
 typedef std::map<KeyNameAndPosition::first_type, KeyNameAndPosition::second_type> KeyNameAndPositionMap;
 typedef std::pair<cell, std::string> CellAndCondition;
+typedef std::pair<float, std::string> update;
+typedef std::map<update::first_type, update::second_type> updates;
+typedef int8_t ActionId;
 
 std::string capitalize(std::string string);
 
