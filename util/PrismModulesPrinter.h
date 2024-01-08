@@ -79,7 +79,7 @@ namespace prism {
       std::string updatesToString(const updates &updates) const;
       std::string updateToString(const update &u) const;
 
-      std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView = true) const;
+      std::string viewVariable(const AgentName &agentName, const size_t &agentDirection) const;
 
 
       std::string buildConjunction(const AgentName &a, std::vector<std::string> formulae) const;
@@ -104,7 +104,6 @@ namespace prism {
       float const faultyProbability;
       float const probIntended;
       std::vector<Configuration> configuration;
-      std::map<int, std::string> viewDirectionMapping;
       std::vector<ViewDirection> viewDirections = {0, 1, 2, 3};
 
       std::map<AgentName, std::set<std::pair<ActionId, std::string>>> agentNameActionMap;
