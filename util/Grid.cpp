@@ -135,7 +135,6 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   cells walkable = floor;
   walkable.insert(walkable.end(), goals.begin(), goals.end());
   walkable.insert(walkable.end(), boxes.begin(), boxes.end());
-  walkable.insert(walkable.end(), adversaries.begin(), adversaries.end());
   walkable.insert(walkable.end(), lava.begin(), lava.end());
   walkable.insert(walkable.end(), keys.begin(), keys.end());
   walkable.insert(walkable.end(), balls.begin(), balls.end());
@@ -165,66 +164,27 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   for(const auto &agentName : agentNames) {
     formulas.print(agentName);
   }
-  if(modelType == prism::ModelType::SMG) modules.printGlobalMoveVariable(os, agentNameAndPositionMap.size());
-  std::vector<std::string> constants {"const double prop_zero = 0/9;",
-                                      "const double prop_intended = 6/9;",
-                                      "const double prop_turn_intended = 6/9;",
-                                      "const double prop_displacement = 3/9;",
-                                      "const double prop_turn_displacement = 3/9;",
-                                      "const int width = " + std::to_string(maxBoundaries.first) + ";",
-                                      "const int height = " + std::to_string(maxBoundaries.second) + ";"
-                                      };
-  modules.printConstants(os, constants);
+  //std::vector<std::string> constants {"const double prop_zero = 0/9;",
+  //                                    "const double prop_intended = 6/9;",
+  //                                    "const double prop_turn_intended = 6/9;",
+  //                                    "const double prop_displacement = 3/9;",
+  //                                    "const double prop_turn_displacement = 3/9;",
+  //                                    "const int width = " + std::to_string(maxBoundaries.first) + ";",
+  //                                    "const int height = " + std::to_string(maxBoundaries.second) + ";"
+  //                                    };
+  //modules.printConstants(os, constants);
   modules.print();
 
 
 
 
-  //modules.printInitStruct(os, agentNameAndPositionMap, keyNameAndPositionMap, lockedDoors, unlockedDoors, modelType);
-
-
-  //size_t agentIndex  = 0;
-  //for(auto agentNameAndPosition = agentNameAndPositionMap.begin(); agentNameAndPosition != agentNameAndPositionMap.end(); ++agentNameAndPosition, agentIndex++) {
-  //  AgentName agentName = agentNameAndPosition->first;
-  //  //std::cout << "Agent Name: " << agentName << std::endl;
-  //  bool agentWithView = std::find(gridOptions.agentsWithView.begin(), gridOptions.agentsWithView.end(), agentName) != gridOptions.agentsWithView.end();
-  //  bool agentWithProbabilisticBehaviour = std::find(gridOptions.agentsWithProbabilisticBehaviour.begin(), gridOptions.agentsWithProbabilisticBehaviour.end(), agentName) != gridOptions.agentsWithProbabilisticBehaviour.end();
-  //  std::set<std::string> slipperyActions; // TODO AGENT POSITION INITIALIZATIN
-  //  if(agentWithProbabilisticBehaviour) modules.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, gridOptions.probabilitiesForActions);
-  //  else                                modules.printModule(os, agentName, agentIndex, maxBoundaries, agentNameAndPosition->second, keys, backgroundTiles, agentWithView, {} ,faultyProbability);
-  //  for(auto const& c : slipperyNorth) {
-  //    modules.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
-  //    if(!gridOptions.enforceOneWays) modules.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::North);
-
-  //  }
-  //  for(auto const& c : slipperyEast) {
-  //    modules.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
-  //    if(!gridOptions.enforceOneWays) modules.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::East);
-  //  }
-  //  for(auto const& c : slipperySouth) {
-  //    modules.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
-  //    if(!gridOptions.enforceOneWays) modules.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::South);
-  //  }
-  //  for(auto const& c : slipperyWest) {
-  //    modules.printSlipperyMove(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
-  //    if(!gridOptions.enforceOneWays) modules.printSlipperyTurn(os, agentName, agentIndex, c.getCoordinates(), slipperyActions, getWalkableDirOf8Neighborhood(c), prism::PrismModulesPrinter::SlipperyType::West);
-  //  }
-
-  //  modules.printEndmodule(os);
-
-  //  if(modelType == prism::ModelType::SMG) {
-  //    if(agentWithProbabilisticBehaviour) modules.printPlayerStruct(os, agentNameAndPosition->first, agentWithView, gridOptions.probabilitiesForActions, slipperyActions);
-  //    else                                modules.printPlayerStruct(os, agentNameAndPosition->first, agentWithView, {}, slipperyActions);
-  //  }
   //if(!stateRewards.empty()) {
   //  modules.printRewards(os, agentName, stateRewards, lava, goals, backgroundTiles);
   //}
 
+  //if (!configuration.empty()) {
+  //  modules.printConfiguration(os, configuration);
   //}
-
-  if (!configuration.empty()) {
-    modules.printConfiguration(os, configuration);
-  }
 }
 
 
