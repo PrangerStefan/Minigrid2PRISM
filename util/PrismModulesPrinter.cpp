@@ -494,6 +494,18 @@ namespace prism {
     os << "endmodule\n\n";
   }
 
+  void PrismModulesPrinter::printMoveModule() {
+    os << "\nmodule " << "Arbiter" << std::endl;
+    os << "\tclock : [0.." << agentIndexMap.size() - 1 << "] init 0;\n";
+
+    for(const auto [agentName, actions] : agentNameActionMap) {
+      for(const auto [actionId, actionName] : actions) {
+        os << "\t" << actionName << " " << moveGuard(agentName) << " -> " << moveUpdate(agentName) << ";\n";
+      }
+    }
+    os << "endmodule\n\n";
+  }
+
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
     for (auto& config : configuration) {
       if (config.type_ == ConfigType::Module && !config.overwrite_ && agentName == config.module_) {
@@ -613,10 +625,6 @@ namespace prism {
     return os;
   }
 
-  std::string PrismModulesPrinter::moveGuard(const AgentName &agentName) const {
-    return isGame() ? " move=" + std::to_string(agentIndexMap.at(agentName)) + " & " : " ";
-  }
-
   std::string PrismModulesPrinter::faultyBehaviourGuard(const AgentName &agentName, const ActionId &actionId) const {
     if(faultyBehaviour()) {
       if(actionId == NOFAULT) {
@@ -637,13 +645,14 @@ namespace prism {
     }
   }
 
+  std::string PrismModulesPrinter::moveGuard(const AgentName &agentName) const {
+    return "clock=" + std::to_string(agentIndexMap.at(agentName));
+  }
+
   std::string PrismModulesPrinter::moveUpdate(const AgentName &agentName) const {
     size_t agentIndex = agentIndexMap.at(agentName);
-    return isGame() ?
-             (agentIndex == numberOfPlayer - 1) ?
-               " & (move'=0) " :
-               " & (move'=" + std::to_string(agentIndex + 1) + ") " :
-               "";
+    return (agentIndex == numberOfPlayer - 1) ? " & (clock'=0) " : " & (clock'=" + std::to_string(agentIndex + 1) + ") ";
+
   }
 
   std::string PrismModulesPrinter::updatesToString(const updates &updates) const {

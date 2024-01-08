@@ -94,6 +94,7 @@ namespace prism {
       std::string printSlipperyTurnUpdate(const AgentName &a, const updates &u);
 
       void printFaultyMovementModule(const AgentName &a);
+      void printMoveModule();
 
       bool anyPortableObject() const;
       bool faultyBehaviour() const;
