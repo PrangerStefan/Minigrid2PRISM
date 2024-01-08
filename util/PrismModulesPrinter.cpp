@@ -39,6 +39,10 @@ namespace prism {
   }
 
   std::ostream& PrismModulesPrinter::print() {
+    for(const auto [agentName, initialPosition] : agentNameAndPositionMap)  {
+      agentNameActionMap[agentName] = {};
+    }
+
     for(const auto &key : keys) {
       printPortableObjectModule(key);
     }
@@ -58,6 +62,13 @@ namespace prism {
     for(const auto [agentName, initialPosition] : agentNameAndPositionMap)  {
       printRobotModule(agentName, initialPosition);
     }
+
+    if(faultyBehaviour()) {
+      for(const auto [agentName, initialPosition] : agentNameAndPositionMap)  {
+        printFaultyMovementModule(agentName);
+      }
+    }
+
     return os;
   }
 
@@ -139,11 +150,21 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printPortableObjectActions(const std::string &agentName, const std::string &identifier) {
-	  os << "\t[" << agentName << "_pickup_" << identifier << "]\ttrue -> (x" << identifier << "'=-1) & (y" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
-	  os << "\t[" << agentName << "_drop_" << identifier << "_north]\ttrue -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
-	  os << "\t[" << agentName << "_drop_" << identifier << "_west]\ttrue -> (x" << identifier << "'=x" << agentName << "-1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
-	  os << "\t[" << agentName << "_drop_" << identifier << "_south]\ttrue -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
-	  os << "\t[" << agentName << "_drop_" << identifier << "_east]\ttrue -> (x" << identifier << "'=x" << agentName << "+1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    std::string actionName = "[" + agentName + "_pickup_" + identifier + "]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " true -> (x" << identifier << "'=-1) & (y" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
+    actionName = "[" + agentName + "_drop_" + identifier + "_north]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
+    actionName = "[" + agentName + "_drop_" + identifier + "_west]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << "-1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    actionName = "[" + agentName + "_drop_" + identifier + "_south]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
+    actionName = "[" + agentName + "_drop_" + identifier + "_east]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " " << " ttrue -> (x" << identifier << "'=x" << agentName << "+1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
   }
 
   void PrismModulesPrinter::printDoorModule(const cell &door, const bool &opened) {
@@ -165,13 +186,21 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printLockedDoorActions(const std::string &agentName, const std::string &identifier) {
-    os << "\t[" << agentName << "_unlock_" << identifier << "] !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
-    os << "\t[" << agentName << "_close_" << identifier << "] " << identifier << "Open -> (" << identifier << "Open'=false);\n";
+    std::string actionName = "[" + agentName + "_unlock_" + identifier + "]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
+    actionName = "[" + agentName + "_close_" + identifier + "]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << actionName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printUnlockedDoorActions(const std::string &agentName, const std::string &identifier) {
-    os << "\t[" << agentName << "_open_" << identifier << "] !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
-    os << "\t[" << agentName << "_close_" << identifier << "] " << identifier << "Open -> (" << identifier << "Open'=false);\n";
+    std::string actionName = "[" + agentName + "_open_" + identifier + "]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
+    actionName = "[" + agentName + "_close_" + identifier + "]";
+    agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
+    os << "\t" << agentName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
@@ -179,8 +208,6 @@ namespace prism {
     os << "\tx"    << agentName << " : [0.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
     os << "\ty"    << agentName << " : [0.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
     os << "\tview" << agentName << " : [0..3] init 1;\n";
-
-    if(faultyBehaviour()) os << "\tpreviousAction" << agentName << " : [-1..2] init -1;\n";
 
     printTurnActionsForRobot(agentName);
     printMovementActionsForRobot(agentName);
@@ -221,23 +248,23 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printPortableObjectActionsForRobot(const std::string &a, const std::string &i) {
-    actionStream << "\t[" << a << "_pickup_" << i << "] "      << faultyBehaviourGuard(a, NOFAULT) << moveGuard(a) << " !" << a << "IsCarrying & " <<  a << "CannotMove" << i << " -> (" << a << "Carrying" << i << "'=true);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_north]\t" << faultyBehaviourGuard(a, NOFAULT) << moveGuard(a) << a << "Carrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_west] \t" << faultyBehaviourGuard(a, NOFAULT) << moveGuard(a) << a << "Carrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_south]\t" << faultyBehaviourGuard(a, NOFAULT) << moveGuard(a) << a << "Carrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_east] \t" << faultyBehaviourGuard(a, NOFAULT) << moveGuard(a) << a << "Carrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (" << a << "Carrying" << i << "'=false);\n";
+    actionStream << "\t[" << a << "_pickup_" << i << "] "      << " !" << a << "IsCarrying & " <<  a << "CannotMove" << i << " -> (" << a << "Carrying" << i << "'=true);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_north]\t" << a << "Carrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_west] \t" << a << "Carrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_south]\t" << a << "Carrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "\t[" << a << "_drop_" << i << "_east] \t" << a << "Carrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (" << a << "Carrying" << i << "'=false);\n";
     actionStream << "\n";
   }
 
   void PrismModulesPrinter::printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier) {
-    actionStream << "\t[" << agentName << "_open_" << identifier  << "] " << faultyBehaviourGuard(agentName, NOFAULT) << moveGuard(agentName) << agentName << "CannotMove" << identifier << " -> true;\n";
-    actionStream << "\t[" << agentName << "_close_" << identifier << "] " << faultyBehaviourGuard(agentName, NOFAULT) << moveGuard(agentName) << agentName << "IsNextTo"     << identifier << " -> true;\n";
+    actionStream << "\t[" << agentName << "_open_" << identifier  << "] " << agentName << "CannotMove" << identifier << " -> true;\n";
+    actionStream << "\t[" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"     << identifier << " -> true;\n";
     actionStream << "\n";
   }
 
   void PrismModulesPrinter::printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key) {
-    actionStream << "\t[" << agentName << "_unlock_" << identifier  << "] " << faultyBehaviourGuard(agentName, NOFAULT) << moveGuard(agentName) << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
-    actionStream << "\t[" << agentName << "_close_" << identifier << "] "   << faultyBehaviourGuard(agentName, NOFAULT) << moveGuard(agentName) << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "\t[" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "\t[" << agentName << "_close_" << identifier << "] "   << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
     actionStream << "\n";
   }
 
@@ -254,32 +281,24 @@ namespace prism {
     actionStream << printMovementGuard(a, "West",  2) << printMovementUpdate(a, {1.0, "(x"+a+"'=x"+a+"-1)"});
   }
 
-  std::string PrismModulesPrinter::printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) const {
-    return "\t[" + a + "_move_" + direction + "]" + moveGuard(a) + viewVariable(a, viewDirection) + faultyBehaviourGuard(a, FORWARD) + " !" + a + "IsOnSlippery & !" + a + "IsOnLava & !" + a + "IsOnGoal & !" + a + "CannotMove" + direction + "Wall &!" + a + "CannotMoveConditionally -> ";
+  std::string PrismModulesPrinter::printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) {
+    std::string actionName = "[" + a + "_move_" + direction + "]";
+    agentNameActionMap.at(a).insert({FORWARD, actionName});
+    return "\t" + actionName + " " + viewVariable(a, viewDirection) + " !" + a + "IsOnSlippery & !" + a + "IsOnLava & !" + a + "IsOnGoal & !" + a + "CannotMove" + direction + "Wall &!" + a + "CannotMoveConditionally -> ";
   }
 
   std::string PrismModulesPrinter::printMovementUpdate(const AgentName &a, const update &u) const {
-    if(!faultyBehaviour()) {
-      return updateToString(u) + ";\n";
-    } else {
-      update nonFaultyUpdate = {u.first - faultyProbability, u.second + " & " + faultyBehaviourUpdate(a, NOFAULT)};
-      update faultyUpdate = {faultyProbability, u.second + " & " + faultyBehaviourUpdate(a, FORWARD)};
-      return updateToString(nonFaultyUpdate) + " + " + updateToString(faultyUpdate) + ";\n";
-    }
+    return updateToString(u) + ";\n";
   }
 
-  std::string PrismModulesPrinter::printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond) const {
-    return "\t[" + a + "_turn_" + direction + "]" + moveGuard(a) + faultyBehaviourGuard(a, actionId) + cond + " -> ";
+  std::string PrismModulesPrinter::printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond) {
+    std::string actionName = "[" + a + "_turn_" + direction + "]";
+    agentNameActionMap.at(a).insert({actionId, actionName});
+    return "\t" + actionName + " " + cond + " -> ";
   }
 
   std::string PrismModulesPrinter::printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const {
-    if(!faultyBehaviour()) {
-      return updateToString(u) + ";\n";
-    } else {
-      update nonFaultyUpdate = {u.first - faultyProbability, u.second + " & " + faultyBehaviourUpdate(a, NOFAULT)};
-      update faultyUpdate = {faultyProbability, u.second + " & " + faultyBehaviourUpdate(a, actionId)};
-      return updateToString(nonFaultyUpdate) + " + " + updateToString(faultyUpdate) + ";\n";
-    }
+    return updateToString(u) + ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForRobot(const AgentName &a) {
@@ -406,59 +425,73 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForNorth(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipNorth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, northUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipNorth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, { "CanSlipNorth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, {"!CanSlipNorth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, northUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, northUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForEast(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipEast"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, eastUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipEast"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, { "CanSlipEast"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, {"!CanSlipEast"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, eastUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, eastUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForSouth(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipSouth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, southUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipSouth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, { "CanSlipSouth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, {"!CanSlipSouth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, southUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, southUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForWest(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipWest"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, westUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipWest"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, { "CanSlipWest"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", RIGHT, {"!CanSlipWest"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, westUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, westUpdate(a)} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
-    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, { "CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", LEFT, {"!CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
   }
 
-  std::string PrismModulesPrinter::printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) const {
-    return "\t[" + a + "_move_" + direction + "] " + moveGuard(a) + viewVariable(a, viewDirection) + faultyBehaviourGuard(a, FORWARD) + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
+  std::string PrismModulesPrinter::printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) {
+    std::string actionName = "[" + a + "_move_" + direction + "]";
+    agentNameActionMap.at(a).insert({FORWARD, actionName});
+    return "\t" + actionName + " " + viewVariable(a, viewDirection) + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const {
-    return updatesToString(u, a, FORWARD);
+    return updatesToString(u);
   }
 
-  std::string PrismModulesPrinter::printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::vector<std::string> &guards, const std::string &cond) const {
-    return "\t[" + a + "_turn_" + direction + "] " + buildConjunction(a, guards) + " & " + cond + " -> ";
+  std::string PrismModulesPrinter::printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond) {
+    std::string actionName = "[" + a + "_turn_" + direction + "]";
+    agentNameActionMap.at(a).insert({actionId, actionName});
+    return "\t" + actionName + " " + buildConjunction(a, guards) + " & " + cond + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyTurnUpdate(const AgentName &a, const updates &u) {
-    return updatesToString(u, a, NOFAULT);
+    return updatesToString(u);
+  }
+
+  void PrismModulesPrinter::printFaultyMovementModule(const AgentName &a) {
+    os << "\nmodule " << a << "FaultyBehaviour" << std::endl;
+    os << "\tpreviousAction" << a << " : [-1..2] init -1;\n";
+
+    for(const auto [actionId, actionName] : agentNameActionMap.at(a)) {
+      os << "\t" << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
+    }
+    os << "endmodule\n\n";
   }
 
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
@@ -587,9 +620,9 @@ namespace prism {
   std::string PrismModulesPrinter::faultyBehaviourGuard(const AgentName &agentName, const ActionId &actionId) const {
     if(faultyBehaviour()) {
       if(actionId == NOFAULT) {
-        return "(previousAction" + agentName + "=" + std::to_string(NOFAULT) + ") & ";
+        return "(previousAction" + agentName + "=" + std::to_string(NOFAULT) + ") ";
       } else {
-        return "(previousAction" + agentName + "=" + std::to_string(NOFAULT) + " | previousAction" + agentName + "=" + std::to_string(actionId) + ") & ";
+        return "(previousAction" + agentName + "=" + std::to_string(NOFAULT) + " | previousAction" + agentName + "=" + std::to_string(actionId) + ") ";
       }
     } else {
       return "";
@@ -597,7 +630,11 @@ namespace prism {
   }
 
   std::string PrismModulesPrinter::faultyBehaviourUpdate(const AgentName &agentName, const ActionId &actionId) const {
-    return "(previousAction" + agentName + "'=" + std::to_string(actionId) + ")";
+    if(actionId != NOFAULT) {
+      return updatesToString({ {1 - faultyProbability, "(previousAction" + agentName + "'=" + std::to_string(NOFAULT) + ")"},  {faultyProbability, "(previousAction" + agentName + "'=" + std::to_string(actionId) + ")" } });
+    } else {
+      return "true";
+    }
   }
 
   std::string PrismModulesPrinter::moveUpdate(const AgentName &agentName) const {
@@ -609,7 +646,7 @@ namespace prism {
                "";
   }
 
-  std::string PrismModulesPrinter::updatesToString(const updates &updates, const AgentName &a, const ActionId &actionId) const {
+  std::string PrismModulesPrinter::updatesToString(const updates &updates) const {
     if(updates.empty()) return "true";
     std::string updatesString = "";
     bool first = true;
@@ -617,7 +654,6 @@ namespace prism {
       if(first) first = false;
       else updatesString += " + ";
       updatesString += updateToString(update);
-      //if(faultyBehaviour()) updatesString += "&" + faultyBehaviourUpdate(a, actionId);
     }
     return updatesString;
   }

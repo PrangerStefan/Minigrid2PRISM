@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <set>
 #include <functional>
 #include "MinigridGrammar.h"
 #include "PrismPrinter.h"
@@ -83,14 +84,16 @@ namespace prism {
       void printSlipperyTurnActionsForSouth(const AgentName &a);
       void printSlipperyTurnActionsForWest(const AgentName &a);
 
-      std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) const;
+      std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection);
       std::string printMovementUpdate(const AgentName &a, const update &update) const;
-      std::string printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond = "") const;
+      std::string printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond = "");
       std::string printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const;
-      std::string printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) const;
+      std::string printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards);
       std::string printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const;
-      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::vector<std::string> &guards, const std::string &cond) const;
+      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond);
       std::string printSlipperyTurnUpdate(const AgentName &a, const updates &u);
+
+      void printFaultyMovementModule(const AgentName &a);
 
       bool anyPortableObject() const;
       bool faultyBehaviour() const;
@@ -99,7 +102,7 @@ namespace prism {
       std::string faultyBehaviourGuard(const AgentName &agentName, const ActionId &actionId) const;
       std::string faultyBehaviourUpdate(const AgentName &agentName, const ActionId &actionId) const;
       std::string moveUpdate(const AgentName &agentName) const;
-      std::string updatesToString(const updates &updates, const AgentName &a, const ActionId &actionId) const;
+      std::string updatesToString(const updates &updates) const;
       std::string updateToString(const update &u) const;
 
       std::string viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView = true) const;
@@ -129,5 +132,7 @@ namespace prism {
       std::vector<Configuration> configuration;
       std::map<int, std::string> viewDirectionMapping;
       std::vector<ViewDirection> viewDirections = {0, 1, 2, 3};
+
+      std::map<AgentName, std::set<std::pair<ActionId, std::string>>> agentNameActionMap;
   };
 }
