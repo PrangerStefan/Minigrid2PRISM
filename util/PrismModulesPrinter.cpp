@@ -72,6 +72,12 @@ namespace prism {
       }
     }
 
+    if(agentNameAndPositionMap.size() > 1) {
+      for(const auto [agentName, index] : agentIndexMap) {
+        printPlayerStruct(agentName);
+      }
+    }
+
     return os;
   }
 
@@ -485,7 +491,7 @@ namespace prism {
     os << "\t[" << agentName << "_done]" << moveGuard(agentName) << agentName << "IsInGoal | " << agentName << "IsInLava -> (" << agentName << "Done'=true);\n";
   }
 
-  void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName, const std::vector<float> &probabilities, const std::set<std::string> &slipperyActions) {
+  void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName) {
     os << "player " << agentName << "\n\t";
     bool first = true;
     for(const auto [actionId, actionName] : agentNameActionMap.at(agentName)) {

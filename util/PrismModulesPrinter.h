@@ -63,7 +63,7 @@ namespace prism {
       void printConstants(const std::vector<std::string> &constants);
 
       void printDoneActions(const AgentName &agentName);
-      void printPlayerStruct(const AgentName &agentName, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});
+      void printPlayerStruct(const AgentName &agentName);
       void printRewards(const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
 
       void printConfiguration(const std::vector<Configuration>& configurations);
