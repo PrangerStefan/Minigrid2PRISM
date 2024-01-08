@@ -227,10 +227,19 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printMovementActionsForRobot(const AgentName &a) {
-    actionStream << printMovementGuard(a, "North", 3) << printMovementUpdate(a, {1.0, "(y"+a+"'=y"+a+"-1)"});
-    actionStream << printMovementGuard(a, "East",  0) << printMovementUpdate(a, {1.0, "(x"+a+"'=x"+a+"+1)"});
-    actionStream << printMovementGuard(a, "South", 1) << printMovementUpdate(a, {1.0, "(y"+a+"'=y"+a+"+1)"});
-    actionStream << printMovementGuard(a, "West",  2) << printMovementUpdate(a, {1.0, "(x"+a+"'=x"+a+"-1)"});
+    actionStream << printMovementGuard(a, "North", 3) << printMovementUpdate(a, {1.0, northUpdate(a)});
+    actionStream << printMovementGuard(a, "East",  0) << printMovementUpdate(a, {1.0, eastUpdate(a)});
+    actionStream << printMovementGuard(a, "South", 1) << printMovementUpdate(a, {1.0, southUpdate(a)});
+    actionStream << printMovementGuard(a, "West",  2) << printMovementUpdate(a, {1.0, westUpdate(a)});
+    if(faultyBehaviour()) {
+      std::string actionName = "[" + a + "_stuck]";
+      agentNameActionMap.at(a).insert({FORWARD, actionName});
+      actionStream << "\t" << actionName << " " << "previousAction" << a << "=" << std::to_string(FORWARD);
+      actionStream << " & ((view" << a << "=0 & " << a << "CannotMoveEastWall) |";
+      actionStream <<    " (view" << a << "=1 & " << a << "CannotMoveSouthWall) |";
+      actionStream <<    " (view" << a << "=2 & " << a << "CannotMoveWestWall) |";
+      actionStream <<    " (view" << a << "=3 & " << a << "CannotMoveNorthWall) ) -> true;\n";
+    }
   }
 
   std::string PrismModulesPrinter::printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) {
@@ -623,8 +632,8 @@ namespace prism {
     return std::to_string(u.first) + ": " + u.second;
   }
 
-  std::string PrismModulesPrinter::viewVariable(const AgentName &agentName, const size_t &agentDirection, const bool agentWithView) const {
-    return agentWithView ? " view" + agentName + "=" + std::to_string(agentDirection) + " & " : " ";
+  std::string PrismModulesPrinter::viewVariable(const AgentName &agentName, const size_t &agentDirection) const {
+    return "view" + agentName + "=" + std::to_string(agentDirection) + " & ";
   }
 
   bool PrismModulesPrinter::anyPortableObject() const {
