@@ -17,7 +17,7 @@ std::string westUpdate(const AgentName &a)  { return "(x"+a+"'=x"+a+"-1)"; }
 namespace prism {
 
   PrismModulesPrinter::PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability)
-    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), faultyProbability(faultyProbability), viewDirectionMapping({{0, "East"}, {1, "South"}, {2, "West"}, {3, "North"}}) {
+    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), faultyProbability(faultyProbability) {
       numberOfPlayer = agentNameAndPositionMap.size();
       size_t index = 0;
       for(auto begin = agentNameAndPositionMap.begin(); begin != agentNameAndPositionMap.end(); begin++, index++) {
@@ -25,7 +25,7 @@ namespace prism {
       }
   }
 
-  std::ostream& PrismModulesPrinter::printModelType(const ModelType &modelType) {
+  void PrismModulesPrinter::printModelType(const ModelType &modelType) {
     switch(modelType) {
       case(ModelType::MDP):
         os << "mdp";
@@ -35,7 +35,6 @@ namespace prism {
         break;
     }
     os << "\n\n";
-    return os;
   }
 
   std::ostream& PrismModulesPrinter::print() {
@@ -73,67 +72,20 @@ namespace prism {
   }
 
 
-  std::ostream& PrismModulesPrinter::printConfiguration(std::ostream& os, const std::vector<Configuration>& configurations) {
+  void PrismModulesPrinter::printConfiguration(const std::vector<Configuration>& configurations) {
     for (auto& configuration : configurations) {
       if (configuration.overwrite_ || configuration.type_ == ConfigType::Module) {
         continue;
       }
       os << configuration.expression_ << std::endl;
     }
-    return os;
   }
 
-  std::ostream& PrismModulesPrinter::printConstants(std::ostream &os, const std::vector<std::string> &constants) {
+  void PrismModulesPrinter::printConstants(const std::vector<std::string> &constants) {
     for (auto& constant : constants) {
       os << constant << std::endl;
     }
-    return os;
   }
-
-  std::ostream& PrismModulesPrinter::printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors, prism::ModelType modelType) {
-    /*
-    os << "init\n";
-    os << "\t";
-
-    bool first = true;
-    for (auto const& agent : agents) {
-      if (first) first = false;
-      else os << " & ";
-      os << "(!" << agent.first << "IsInGoal & !" << agent.first << "IsInLava & !" << agent.first << "Done & !" << agent.first << "IsOnWall & ";
-      os << "x" << agent.first << "=" << agent.second.second << " & y" << agent.first << "=" << agent.second.first << ")";
-      os << " & !" << agent.first << "_is_carrying_object";
-        // os << " & ( !AgentIsOnSlippery ) ";
-      }
-
-      for (auto const& key : keys) {
-         os << " & ( !" << agent.first << "_has_" << key.first << "_key )";
-      }
-    }
-
-    for (auto const& key : keys) {
-      os << " & ( xKey" << key.first << "="<< key.second.second<< ")";
-      os << " & ( yKey" << key.first << "=" << key.second.first << ")";
-    }
-
-    for (auto const& locked : lockedDoors) {
-      os << " & (Door" << locked.getColor() << "locked & !Door" << locked.getColor() << "open)";
-    }
-
-    for (auto const& unlocked : unlockedDoors) {
-      os << " & (!Door" << unlocked.getColor() << "locked & !Door" << unlocked.getColor() << "open)";
-    }
-
-    if (modelType == ModelType::SMG) {
-      os << " & move=0";
-    }
-
-
-    os << "\nendinit\n\n";
-
-    */
-    return os;
-  }
-
 
   void PrismModulesPrinter::printPortableObjectModule(const cell &object) {
     std::string identifier = capitalize(object.getColor()) + object.getType();
@@ -506,7 +458,7 @@ namespace prism {
     os << "endmodule\n\n";
   }
 
-  std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
+  void PrismModulesPrinter::printConfiguredActions(const AgentName &agentName) {
     for (auto& config : configuration) {
       if (config.type_ == ConfigType::Module && !config.overwrite_ && agentName == config.module_) {
         os << config.expression_ ;
