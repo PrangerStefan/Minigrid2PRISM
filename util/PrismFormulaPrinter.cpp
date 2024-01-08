@@ -76,6 +76,8 @@ namespace prism {
       for(const auto& [direction, relativePosition] : getRelativeSurroundingCells()) {
         printSlipRestrictionFormula(agentName, direction);
       }
+    } else {
+      os << buildFormula(agentName + "IsOnSlippery", "false");
     }
     printIsOnFormula(agentName, "Lava", lava);
     printIsOnFormula(agentName, "Goal", goals);
@@ -113,6 +115,8 @@ namespace prism {
     if(conditionalMovementRestrictions.size() > 0) {
       os << buildFormula(agentName + "CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
       os << buildFormula(agentName + "IsCarrying", vectorToDisjunction(portableObjects));
+    } else {
+      os << buildFormula(agentName + "CannotMoveConditionally", "false");
     }
   }
 
