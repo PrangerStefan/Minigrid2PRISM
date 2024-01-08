@@ -186,18 +186,3 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   //  modules.printConfiguration(os, configuration);
   //}
 }
-
-
-std::array<bool, 8> Grid::getWalkableDirOf8Neighborhood(cell c) /* const */ {
-  return (std::array<bool, 8>)
-         {
-           !isBlocked(c.getNorth()),
-           !isBlocked(c.getNorth(allGridCells).getEast()),
-           !isBlocked(c.getEast()),
-           !isBlocked(c.getSouth(allGridCells).getEast()),
-           !isBlocked(c.getSouth()),
-           !isBlocked(c.getSouth(allGridCells).getWest()),
-           !isBlocked(c.getWest()),
-           !isBlocked(c.getNorth(allGridCells).getWest())
-         };
-}
