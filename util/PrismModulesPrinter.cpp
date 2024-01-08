@@ -62,6 +62,10 @@ namespace prism {
       printRobotModule(agentName, initialPosition);
     }
 
+    if(agentNameAndPositionMap.size() > 1) {
+      printMoveModule();
+    }
+
     if(faultyBehaviour()) {
       for(const auto [agentName, initialPosition] : agentNameAndPositionMap)  {
         printFaultyMovementModule(agentName);
@@ -475,52 +479,24 @@ namespace prism {
     }
 
     os << "\n";
-
-    return os;
   }
 
-  std::ostream& PrismModulesPrinter::printDoneActions(std::ostream &os, const AgentName &agentName) {
+  void PrismModulesPrinter::printDoneActions(const AgentName &agentName) {
     os << "\t[" << agentName << "_done]" << moveGuard(agentName) << agentName << "IsInGoal | " << agentName << "IsInLava -> (" << agentName << "Done'=true);\n";
-    return os;
   }
 
-  std::ostream& PrismModulesPrinter::printPlayerStruct(std::ostream &os, const AgentName &agentName, const bool agentWithView, const std::vector<float> &probabilities, const std::set<std::string> &slipperyActions) {
+  void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName, const std::vector<float> &probabilities, const std::set<std::string> &slipperyActions) {
     os << "player " << agentName << "\n\t";
     bool first = true;
-    std::list<std::string> allActions = { "_move_north", "_move_east", "_move_south", "_move_west" };
-    std::list<std::string> movementActions = allActions;
-    for(auto const& probability : probabilities) {
-      std::string percentageString = std::to_string((int)(100 * probability));
-      for(auto const& movement : movementActions) {
-        allActions.push_back(movement + "_" + percentageString);
-      }
+    for(const auto [actionId, actionName] : agentNameActionMap.at(agentName)) {
+      if(first) first = false;
+      else os << ", ";
+      os << actionName;
     }
-    if(agentWithView) {
-      allActions.push_back("_turn_left");
-      allActions.push_back("_turn_right");
-    } else {
-      allActions.push_back("_turns");
-    }
-
-    for(auto const& action : allActions) {
-      if(first) first = false; else os << ", ";
-      os << "[" << agentName << action << "]";
-    }
-    for(auto const& action : slipperyActions) {
-      os << ", " << action;
-    }
-
-    os << ", [" << agentName << "_done]";
     os << "\nendplayer\n";
-    return os;
   }
 
-  std::ostream& PrismModulesPrinter::printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer) {
-    os << "\nglobal move : [0.." << std::to_string(numberOfPlayer - 1) << "];\n\n";
-    return os;
-  }
-
-  std::ostream& PrismModulesPrinter::printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles) {
+  void PrismModulesPrinter::printRewards(const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles) {
     if(lava.size() != 0) {
       os << "rewards \"" << agentName << "SafetyNoBFS\"\n";
       os << "\t" <<agentName << "IsInLavaAndNotDone: -100;\n";
@@ -583,7 +559,6 @@ namespace prism {
       if(goals.size() != 0) os << "\tAgentIsInGoalAndNotDone & !(" << allPassengersPickedUp << ") :  -100;\n";
       os << "endrewards";
     }
-    return os;
   }
 
   std::string PrismModulesPrinter::faultyBehaviourGuard(const AgentName &agentName, const ActionId &actionId) const {
@@ -612,7 +587,7 @@ namespace prism {
 
   std::string PrismModulesPrinter::moveUpdate(const AgentName &agentName) const {
     size_t agentIndex = agentIndexMap.at(agentName);
-    return (agentIndex == numberOfPlayer - 1) ? " & (clock'=0) " : " & (clock'=" + std::to_string(agentIndex + 1) + ") ";
+    return (agentIndex == numberOfPlayer - 1) ? "(clock'=0) " : "(clock'=" + std::to_string(agentIndex + 1) + ") ";
 
   }
 
