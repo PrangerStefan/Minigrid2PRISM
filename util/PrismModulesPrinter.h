@@ -20,43 +20,7 @@ namespace prism {
 
       std::ostream& print();
 
-      std::ostream& printModelType(const ModelType &modelType);
-
-
-      std::ostream& printConstants(std::ostream &os, const std::vector<std::string> &constants);
-       /*
-        * Representation for Slippery Tile.
-        *  -) North: Slips from North to South
-        *  -) East: Slips from East to West
-        *  -) South: Slips from South to North
-        *  -) West: Slips from West to East
-        */
-      enum class SlipperyType { North, East, South, West };
-
-      /*
-       * Prints Slippery on move action.
-       *
-       * @param neighborhood: Information of wall-blocks in 8-neighborhood { n, nw, e, se, s, sw, w, nw }. If entry is false, then corresponding neighboorhood position is a wall.
-       * @param orientation: Information of slippery type (either north, south, east, west).
-       */
-      std::ostream& printSlipperyMove(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &c, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation);
-
-      /*
-       * Prints Slippery on turn action.
-       *
-       * @param neighborhood: Information of wall-blocks in 8-neighborhood { n, nw, e, se, s, sw, w, nw }. If entry is false, then corresponding neighboorhood position is a wall.
-       * @param orientation: Information of slippery type (either north, south, east, west).
-       */
-      std::ostream& printSlipperyTurn(std::ostream &os, const AgentName &agentName, const size_t &agentIndex, const coordinates &c, std::set<std::string> &slipperyActions, const std::array<bool, 8>& neighborhood, SlipperyType orientation);
-
-      std::ostream& printInitStruct(std::ostream &os, const AgentNameAndPositionMap &agents, const KeyNameAndPositionMap &keys, const cells &lockedDoors, const cells &unlockedDoors, prism::ModelType modelType);
-      std::ostream& printDoneActions(std::ostream &os, const AgentName &agentName);
-      std::ostream& printPlayerStruct(std::ostream &os, const AgentName &agentName, const bool agentWithView, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});
-      std::ostream& printGlobalMoveVariable(std::ostream &os, const size_t &numberOfPlayer);
-      std::ostream& printRewards(std::ostream &os, const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
-
-      std::ostream& printConfiguration(std::ostream &os, const std::vector<Configuration>& configurations);
-      std::ostream& printConfiguredActions(std::ostream &os, const AgentName &agentName);
+      void printModelType(const ModelType &modelType);
 
 
       bool isGame() const;
@@ -95,6 +59,15 @@ namespace prism {
 
       void printFaultyMovementModule(const AgentName &a);
       void printMoveModule();
+
+      void printConstants(const std::vector<std::string> &constants);
+
+      void printDoneActions(const AgentName &agentName);
+      void printPlayerStruct(const AgentName &agentName, const std::vector<float> &probabilities = {}, const std::set<std::string> &slipperyActions = {});
+      void printRewards(const AgentName &agentName, const std::map<coordinates, float> &stateRewards, const cells &lava, const cells &goals, const std::map<Color, cells> &backgroundTiles);
+
+      void printConfiguration(const std::vector<Configuration>& configurations);
+      void printConfiguredActions(const AgentName &agentName);
 
       bool anyPortableObject() const;
       bool faultyBehaviour() const;
