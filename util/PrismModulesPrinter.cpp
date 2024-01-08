@@ -285,15 +285,19 @@ namespace prism {
   void PrismModulesPrinter::printSlipperyMovementActionsForRobot(const AgentName &a) {
     if(!slipperyTiles.at("North").empty()) {
       printSlipperyMovementActionsForNorth(a);
+      printSlipperyTurnActionsForNorth(a);
     }
     if(!slipperyTiles.at("East").empty()) {
       printSlipperyMovementActionsForEast(a) ;
+      printSlipperyTurnActionsForEast(a);
     }
     if(!slipperyTiles.at("South").empty()) {
       printSlipperyMovementActionsForSouth(a);
+      printSlipperyTurnActionsForSouth(a);
     }
     if(!slipperyTiles.at("West").empty()) {
       printSlipperyMovementActionsForWest(a) ;
+      printSlipperyTurnActionsForWest(a);
     }
   }
 
@@ -401,15 +405,61 @@ namespace prism {
     actionStream << printSlipperyMovementGuard(a, "West", 0, {"!CanSlipEast", "!CanSlipWest"}) << printSlipperyMovementUpdate(a, "West", {}) << "\n";
   }
 
+  void PrismModulesPrinter::printSlipperyTurnActionsForNorth(const AgentName &a) {
+    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipNorth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipNorth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, northUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+  }
+
+  void PrismModulesPrinter::printSlipperyTurnActionsForEast(const AgentName &a) {
+    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipEast"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipEast"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, eastUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+  }
+
+  void PrismModulesPrinter::printSlipperyTurnActionsForSouth(const AgentName &a) {
+    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipSouth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipSouth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, southUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+  }
+
+  void PrismModulesPrinter::printSlipperyTurnActionsForWest(const AgentName &a) {
+    actionStream << printSlipperyTurnGuard(a, "right", { "CanSlipWest"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "right", {"!CanSlipWest"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"-1)"}, {1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", { "CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"=3)"},     {1 - probIntended, westUpdate(a)} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << "\n";
+    actionStream << printSlipperyTurnGuard(a, "left", {"!CanSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"=3)"} }) << "\n";
+  }
 
   std::string PrismModulesPrinter::printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) const {
-    return "\t[" + a + "_move_" + direction + "]" + moveGuard(a) + viewVariable(a, viewDirection) + faultyBehaviourGuard(a, FORWARD) + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
+    return "\t[" + a + "_move_" + direction + "] " + moveGuard(a) + viewVariable(a, viewDirection) + faultyBehaviourGuard(a, FORWARD) + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const {
     return updatesToString(u, a, FORWARD);
   }
 
+  std::string PrismModulesPrinter::printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::vector<std::string> &guards, const std::string &cond) const {
+    return "\t[" + a + "_turn_" + direction + "] " + buildConjunction(a, guards) + " & " + cond + " -> ";
+  }
+
+  std::string PrismModulesPrinter::printSlipperyTurnUpdate(const AgentName &a, const updates &u) {
+    return updatesToString(u, a, NOFAULT);
+  }
 
   std::ostream& PrismModulesPrinter::printConfiguredActions(std::ostream &os, const AgentName &agentName) {
     for (auto& config : configuration) {

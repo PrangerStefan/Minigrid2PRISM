@@ -78,6 +78,10 @@ namespace prism {
       void printSlipperyMovementActionsForEast(const AgentName &a);
       void printSlipperyMovementActionsForSouth(const AgentName &a);
       void printSlipperyMovementActionsForWest(const AgentName &a);
+      void printSlipperyTurnActionsForNorth(const AgentName &a);
+      void printSlipperyTurnActionsForEast(const AgentName &a);
+      void printSlipperyTurnActionsForSouth(const AgentName &a);
+      void printSlipperyTurnActionsForWest(const AgentName &a);
 
       std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) const;
       std::string printMovementUpdate(const AgentName &a, const update &update) const;
@@ -85,6 +89,8 @@ namespace prism {
       std::string printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const;
       std::string printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) const;
       std::string printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const;
+      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::vector<std::string> &guards, const std::string &cond) const;
+      std::string printSlipperyTurnUpdate(const AgentName &a, const updates &u);
 
       bool anyPortableObject() const;
       bool faultyBehaviour() const;
