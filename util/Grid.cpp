@@ -11,8 +11,8 @@ prism::ModelType GridOptions::getModelType() const
   return prism::ModelType::MDP;
 }
 
-Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards, const float faultyProbability)
-  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards), faultyProbability(faultyProbability)
+Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
+  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
   maxBoundaries = std::make_pair(max.row - 1, max.column - 1);
@@ -159,7 +159,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   std::string agentName = agentNames.at(0);
 
   prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals);
-  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, faultyProbability);
+  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, faultyProbability);
 
   modules.printModelType(modelType);
   for(const auto &agentName : agentNames) {
