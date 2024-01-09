@@ -4,8 +4,12 @@
 
 std::ostream &operator<<(std::ostream &os, const cell &c) {
   os << static_cast<char>(c.type) << static_cast<char>(c.color);
-  os <<  " at (" << c.row << "," << c.column << ")";
+  os <<  " at (" << c.column << "," << c.row << ")";
   return os;
+}
+
+coordinates cell::getCoordinates() const {
+  return std::make_pair(column, row);
 }
 
 cell cell::getNorth(const std::vector<cell> &grid) const {
@@ -52,10 +56,6 @@ cell cell::getWest(const std::vector<cell> &grid) const {
   return *west;
 }
 
-coordinates cell::getCoordinates() const {
-  return std::make_pair(row, column);
-}
-
 std::string cell::getColor() const {
   switch(color) {
     case Color::Red:    return "red";
@@ -66,6 +66,27 @@ std::string cell::getColor() const {
     case Color::None:   return "transparent";
     default: return "";
     //case Color::Grey   = 'G',
+  }
+}
+
+std::string cell::getType() const {
+  switch(type) {
+    case Type::Wall:         return "Wall";
+    case Type::Floor:        return "Floor";
+    case Type::Door:         return "Door";
+    case Type::LockedDoor:    return "LockedDoor";
+    case Type::Key:          return "Key";
+    case Type::Ball:          return "Ball";
+    case Type::Box:           return "Box";
+    case Type::Goal:          return "Goal";
+    case Type::Lava:          return "Lava";
+    case Type::Agent:         return "Agent";
+    case Type::Adversary:     return "Adversary";
+    case Type::SlipperyNorth: return "SlipperyNorth";
+    case Type::SlipperySouth: return "SlipperySouth";
+    case Type::SlipperyEast:  return "SlipperyEast";
+    case Type::SlipperyWest:  return "SlipperyWest";
+    default: return "";
   }
 }
 

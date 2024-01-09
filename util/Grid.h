@@ -7,6 +7,8 @@
 
 #include "MinigridGrammar.h"
 #include "PrismModulesPrinter.h"
+#include "PrismFormulaPrinter.h"
+#include "ConfigYaml.h"
 
 struct GridOptions {
   std::vector<AgentName> agentsToBeConsidered;
@@ -14,20 +16,20 @@ struct GridOptions {
   std::vector<AgentName> agentsWithProbabilisticBehaviour;
   std::vector<float>     probabilitiesForActions;
   bool                   enforceOneWays;
+
+  prism::ModelType getModelType() const;
 };
 
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards = {});
+    Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
 
     cells getGridCells();
 
     bool isBlocked(coordinates p);
     bool isWall(coordinates p);
-    bool isLockedDoor(coordinates p);
-    bool isKey(coordinates p);
-    bool isBox(coordinates p);
-    void printToPrism(std::ostream &os, const prism::ModelType& modelType);
+    void printToPrism(std::ostream &os, std::vector<Configuration>& configuration, const prism::ModelType& modelType);
+    void applyOverwrites(std::string& str, std::vector<Configuration>& configuration);
 
     std::array<bool, 8> getWalkableDirOf8Neighborhood(cell c);
 
@@ -43,6 +45,7 @@ class Grid {
     cell agent;
     cells adversaries;
     AgentNameAndPositionMap agentNameAndPositionMap;
+    KeyNameAndPositionMap keyNameAndPositionMap;
 
     cells walls;
     cells floor;
@@ -51,7 +54,9 @@ class Grid {
     cells slipperySouth;
     cells slipperyWest;
     cells lockedDoors;
+    cells unlockedDoors;
     cells boxes;
+    cells balls;
     cells lava;
 
     cells goals;
@@ -60,4 +65,6 @@ class Grid {
     std::map<Color, cells> backgroundTiles;
 
     std::map<coordinates, float> stateRewards;
+    const float probIntended;
+    const float faultyProbability;
 };
