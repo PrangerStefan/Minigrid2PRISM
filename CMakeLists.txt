@@ -1,24 +1,26 @@
-include(util/CMakeLists.txt)
-
-set(CMAKE_CXX_STANDARD 20)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
-add_definitions(-DLOG_DEBUG)
-
 cmake_minimum_required(VERSION 3.0...3.22)
-
-set(CMAKE_BUILD_TYPE Debug)
-
 project(
   Minigrid2PRISM
   VERSION 0.1
   LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
 
-find_package(yaml-cpp)
+include(util/CMakeLists.txt)
+include(FetchContent)
 
-add_executable(main
-               ${SRCS}
-               main.cpp
-               )
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG master
+  OVERRIDE_FIND_PACKAGE
+)
+FetchContent_GetProperties(yaml-cpp)
+if(NOT yaml-cpp_POPULATED)
+  message(STATUS "Fetching yaml-cpp...")
+  FetchContent_Populate(yaml-cpp)
+  add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
+endif()
+FetchContent_MakeAvailable(yaml-cpp)
 
-target_link_libraries(main pthread yaml-cpp)
+add_executable(main ${SRCS} main.cpp)
+target_link_libraries(main pthread yaml-cpp::yaml-cpp)

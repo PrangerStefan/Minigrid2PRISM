@@ -40,10 +40,10 @@ std::string getColor(Color color);
 
 class cell {
   public:
-    coordinates getNorth() const { return std::make_pair(row - 1, column); }
-    coordinates getSouth() const { return std::make_pair(row + 1, column); }
-    coordinates getEast()  const { return std::make_pair(row, column + 1); }
-    coordinates getWest()  const { return std::make_pair(row, column - 1); }
+    coordinates getNorth() const { return std::make_pair(column, row - 1); }
+    coordinates getSouth() const { return std::make_pair(column, row + 1); }
+    coordinates getEast()  const { return std::make_pair(column + 1, row); }
+    coordinates getWest()  const { return std::make_pair(column - 1, row); }
 
     cell getNorth(const std::vector<cell> &grid) const;
     cell getEast(const std::vector<cell> &grid) const;
@@ -54,6 +54,7 @@ class cell {
 
     coordinates getCoordinates() const;
     std::string getColor() const;
+    std::string getType() const;
 
     int row;
     int column;

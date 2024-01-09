@@ -144,12 +144,13 @@ int main(int argc, char* argv[]) {
   pos_iterator_t backgroundIter = backgroundFirst;
   pos_iterator_t backgroundLast(background.end());
   MinigridParser<pos_iterator_t> backgroundParser(backgroundFirst);
-  
+
   cells contentCells;
   cells backgroundCells;
   std::vector<Configuration> configurations;
   std::map<coordinates, float> stateRewards;
-  double faultyProbability;
+  float faultyProbability = 0.0;
+  float probIntended = 0.9;
 
   try {
     bool ok = phrase_parse(contentIter, contentLast, contentParser, qi::space, contentCells);
@@ -157,7 +158,7 @@ int main(int argc, char* argv[]) {
     ok     &= phrase_parse(backgroundIter, backgroundLast, backgroundParser, qi::space, backgroundCells);
     // TODO }
     if (configFilename->is_set()) {
-      YamlConfigParser parser(configFilename->value(0));  
+      YamlConfigParser parser(configFilename->value(0));
       configurations = parser.parseConfiguration();
     }
 
@@ -181,8 +182,9 @@ int main(int argc, char* argv[]) {
       }
     }
     if(ok) {
-      Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, faultyProbability);
-      //grid.printToPrism(std::cout, prism::ModelType::MDP);
+      Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, probIntended, faultyProbability);
+
+      grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
       std::stringstream ss;
       // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
       grid.printToPrism(ss, configurations , gridOptions.getModelType());

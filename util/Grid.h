@@ -7,6 +7,7 @@
 
 #include "MinigridGrammar.h"
 #include "PrismModulesPrinter.h"
+#include "PrismFormulaPrinter.h"
 #include "ConfigYaml.h"
 
 struct GridOptions {
@@ -21,16 +22,12 @@ struct GridOptions {
 
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards = {}, const double faultyProbability = 0);
+    Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
 
     cells getGridCells();
 
     bool isBlocked(coordinates p);
     bool isWall(coordinates p);
-    bool isLockedDoor(coordinates p);
-    bool isUnlockedDoor(coordinates p);
-    bool isKey(coordinates p);
-    bool isBox(coordinates p);
     void printToPrism(std::ostream &os, std::vector<Configuration>& configuration, const prism::ModelType& modelType);
     void applyOverwrites(std::string& str, std::vector<Configuration>& configuration);
 
@@ -59,6 +56,7 @@ class Grid {
     cells lockedDoors;
     cells unlockedDoors;
     cells boxes;
+    cells balls;
     cells lava;
 
     cells goals;
@@ -67,5 +65,6 @@ class Grid {
     std::map<Color, cells> backgroundTiles;
 
     std::map<coordinates, float> stateRewards;
-    double faultyProbability;
+    const float probIntended;
+    const float faultyProbability;
 };
