@@ -1,6 +1,7 @@
 #include "cell.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 std::ostream &operator<<(std::ostream &os, const cell &c) {
   os << static_cast<char>(c.type) << static_cast<char>(c.color);
