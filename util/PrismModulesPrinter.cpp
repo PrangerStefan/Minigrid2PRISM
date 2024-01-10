@@ -381,7 +381,7 @@ namespace prism {
 
     actionStream << printSlipperyMovementGuard(a, "West", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, northUpdate(a) }, {1 - probIntended, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 3, {    a+"CannotSlipNorth", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {1, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "West", 3, {"!"+a+"CannotSlipNorth",     a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {1, westUpdate(a) } }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "West", 3, {"!"+a+"CannotSlipNorth",     a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {1, northUpdate(a) } }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 3, {    a+"CannotSlipNorth",     a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", {}) << ";\n";
 
     actionStream << printSlipperyMovementGuard(a, "West", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, southUpdate(a) }, {1 - probIntended, westUpdate(a)+"&"+southUpdate(a)} }) << ";\n";
