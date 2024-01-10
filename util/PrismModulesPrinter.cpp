@@ -167,8 +167,8 @@ namespace prism {
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
     os << "\nmodule " << agentName << std::endl;
-    os << "\tx"    << agentName << " : [0.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
-    os << "\ty"    << agentName << " : [0.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
+    os << "\tx"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
+    os << "\ty"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
     os << "\tview" << agentName << " : [0..3] init 1;\n";
 
     printTurnActionsForRobot(agentName);
