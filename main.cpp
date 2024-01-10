@@ -42,6 +42,24 @@ void print_info(boost::spirit::info const& what) {
   boost::apply_visitor(walker, what.value);
 }
 
+void setProbability(const std::string& gridProperties, const std::vector<Probability> configProperties, const std::string& identifier, float& prop) {
+  auto start_pos = gridProperties.find(identifier);
+  std::string seperator = ";";
+
+  if (start_pos != std::string::npos) {
+    auto end_pos = gridProperties.find('\n', start_pos);
+    auto value = gridProperties.substr(start_pos + identifier.length()  + seperator.size(), end_pos - start_pos - identifier.length()); 
+    prop = std::stod(value);
+  }
+
+  auto yaml_config_prop = std::find_if(configProperties.begin(), configProperties.end(), [&identifier](const Probability&  obj) -> bool {return obj.probability_ == identifier;} );
+
+  if (yaml_config_prop != configProperties.end()) {
+    prop = (*yaml_config_prop).value_;    
+  }
+}
+
+
 int main(int argc, char* argv[]) {
   popl::OptionParser optionParser("Allowed options");
 
@@ -114,6 +132,7 @@ int main(int argc, char* argv[]) {
   std::map<coordinates, float> stateRewards;
   float faultyProbability = 0.1;
   float probIntended = 0.9;
+  float probTurnIntended = 1;
 
   try {
     bool ok = phrase_parse(contentIter, contentLast, contentParser, qi::space, contentCells);
@@ -136,15 +155,13 @@ int main(int argc, char* argv[]) {
       stateRewards[std::make_pair(x,y)] = reward;
     }
     if (!properties.empty()) {
-      auto faultProbabilityIdentifier = std::string("FaultProbability:");
-      auto start_pos = properties.find(faultProbabilityIdentifier);
+      auto faultProbabilityIdentifier = std::string("FaultProbability");
+      auto probForwardIntendedIdentifier = std::string("ProbForwardIntended");
+      auto probTurnIntendedIdentifier = std::string("ProbTurnIntended");
 
-
-      if (start_pos != std::string::npos) {
-        auto end_pos = properties.find('\n', start_pos);
-        auto value = properties.substr(start_pos + faultProbabilityIdentifier.length(), end_pos - start_pos - faultProbabilityIdentifier.length());
-        faultyProbability = std::stod(value);
-      }
+      setProbability(properties, probabilities, faultProbabilityIdentifier, faultyProbability);
+      setProbability(properties, probabilities, probForwardIntendedIdentifier, probIntended);
+      setProbability(properties, probabilities, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
       Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, probIntended, faultyProbability);
