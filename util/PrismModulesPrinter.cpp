@@ -9,10 +9,10 @@
 #define FORWARD 2
 
 
-std::string northUpdate(const AgentName &a) { return "(y"+a+"'=y"+a+"-1)"; }
-std::string southUpdate(const AgentName &a) { return "(y"+a+"'=y"+a+"+1)"; }
-std::string eastUpdate(const AgentName &a)  { return "(x"+a+"'=x"+a+"+1)"; }
-std::string westUpdate(const AgentName &a)  { return "(x"+a+"'=x"+a+"-1)"; }
+std::string northUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"-1)"; }
+std::string southUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"+1)"; }
+std::string eastUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"+1)"; }
+std::string westUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"-1)"; }
 
 namespace prism {
 
@@ -167,8 +167,8 @@ namespace prism {
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
     os << "\nmodule " << agentName << std::endl;
-    os << "\tx"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
-    os << "\ty"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
+    os << "\tcol"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
+    os << "\trow"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
     os << "\tview" << agentName << " : [0..3] init 1;\n";
 
     printTurnActionsForRobot(agentName);
