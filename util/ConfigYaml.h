@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <ostream>
+#include <utility>
 
 #include "yaml-cpp/yaml.h"
 
@@ -41,6 +42,17 @@ struct Configuration
     os << "Configuration with Type: " << static_cast<char>(config.type_) << std::endl; 
     return os << "\tExpression=" << config.expression_ << std::endl;
   }
+};
+
+struct Probability {
+  Probability() = default;
+  Probability(const Probability&) = default;
+  ~Probability() = default;
+
+  std::string probability_;
+  double value_; 
+
+  friend std::ostream& operator <<(std::ostream& os, const Probability& property);
 };
 
 struct Constant {
@@ -137,6 +149,22 @@ struct YAML::convert<Constant> {
   static bool decode(const YAML::Node& node, Constant& rhs);
 };
 
+template<>
+struct YAML::convert<Probability> {
+  static YAML::Node encode(const Probability& rhs);
+  static bool decode(const YAML::Node& node, Probability& rhs);
+};
+
+struct YamlConfigParseResult {
+  YamlConfigParseResult(std::vector<Configuration> configurations, std::vector<Probability>  probabilities) 
+    : configurations_(configurations), probabilities_(probabilities) {}
+
+  ~YamlConfigParseResult() = default;
+  YamlConfigParseResult(const YamlConfigParseResult&) = default;
+
+  std::vector<Configuration> configurations_;
+  std::vector<Probability>  probabilities_;
+};
 
 struct YamlConfigParser {
     public:
@@ -144,7 +172,7 @@ struct YamlConfigParser {
         YamlConfigParser(const YamlConfigParser&) = delete;
         ~YamlConfigParser() = default;
 
-        std::vector<Configuration> parseConfiguration();
+        YamlConfigParseResult parseConfiguration();
     private:
 
         std::string file_;

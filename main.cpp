@@ -110,6 +110,7 @@ int main(int argc, char* argv[]) {
   cells contentCells;
   cells backgroundCells;
   std::vector<Configuration> configurations;
+  std::vector<Probability> probabilities;
   std::map<coordinates, float> stateRewards;
   float faultyProbability = 0.1;
   float probIntended = 0.9;
@@ -121,7 +122,9 @@ int main(int argc, char* argv[]) {
     // TODO }
     if (configFilename->is_set()) {
       YamlConfigParser parser(configFilename->value(0));
-      configurations = parser.parseConfiguration();
+      auto parseResult = parser.parseConfiguration();
+      configurations = parseResult.configurations_;
+      probabilities = parseResult.probabilities_;
     }
 
     boost::escaped_list_separator<char> seps('\\', ';', '\n');

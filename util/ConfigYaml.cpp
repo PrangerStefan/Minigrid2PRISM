@@ -185,11 +185,32 @@ bool YAML::convert<Constant>::decode(const YAML::Node& node, Constant& rhs) {
     return true;
 }
 
+YAML::Node YAML::convert<Probability>::encode(const Probability& rhs) {
+    YAML::Node node;
+    
+    node.push_back(rhs.probability_);
+    node.push_back(rhs.value_);
+
+    return node;
+}
+
+bool YAML::convert<Probability>::decode(const YAML::Node& node, Probability& rhs) {
+    if (!node.IsDefined() || !node["probability"] || !node["value"]) {
+        return false;
+    }
+
+    rhs.probability_ = node["probability"].as<std::string>();
+    rhs.value_ = node["value"].as<double>();
+
+    return true;
+}
+
 const std::string Configuration::configuration_identifier_ { "; // created through configuration"};
 const std::string Configuration::overwrite_identifier_{"; // Overwritten through configuration"};
 
- std::vector<Configuration> YamlConfigParser::parseConfiguration() {
+YamlConfigParseResult YamlConfigParser::parseConfiguration() {
         std::vector<Configuration> configuration;
+        std::vector<Probability> probabilities;
 
         try {
             YAML::Node config = YAML::LoadFile(file_);  
@@ -210,6 +231,10 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
 
             if (config["constants"]) {
                 constants = config["constants"].as<std::vector<Constant>>();
+            }
+
+            if (config["probabilities"]) {
+                probabilities = config["probabilities"].as<std::vector<Probability>>();
             }
         
             for (auto& label : labels) {
@@ -234,5 +259,5 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             std::cout << "while parsing configuration " << file_ << std::endl;
         }
 
-        return configuration;
+        return YamlConfigParseResult(configuration, probabilities);
 }
