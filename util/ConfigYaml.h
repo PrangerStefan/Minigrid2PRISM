@@ -95,7 +95,7 @@ struct Formula {
   friend std::ostream& operator << (std::ostream &os, const Formula& formula);
 };
 
-struct Action {
+struct Command {
   public:
   std::string action_;
   std::string guard_;
@@ -105,13 +105,13 @@ struct Action {
 
   std::string createExpression() const;
 
-  friend std::ostream& operator << (std::ostream& os, const Action& action);
+  friend std::ostream& operator << (std::ostream& os, const Command& command);
 };
 
 struct Module {
   public:
 
-  std::vector<Action> actions_;
+  std::vector<Command> commands_;
   std::string module_;
 
   friend std::ostream& operator << (std::ostream& os, const Module& module);
@@ -125,9 +125,9 @@ struct YAML::convert<Module> {
 };
 
 template<>
-struct YAML::convert<Action> {
-  static YAML::Node encode(const Action& rhs);
-  static bool decode(const YAML::Node& node, Action& rhs);
+struct YAML::convert<Command> {
+  static YAML::Node encode(const Command& rhs);
+  static bool decode(const YAML::Node& node, Command& rhs);
 };
 
 

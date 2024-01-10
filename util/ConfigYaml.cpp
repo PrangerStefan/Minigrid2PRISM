@@ -11,8 +11,8 @@ std::ostream& operator << (std::ostream &os, const Formula& formula) {
     return os;
 }
 
-std::ostream& operator << (std::ostream& os, const Action& action) {
-    os << action.action_;
+std::ostream& operator << (std::ostream& os, const Command& command) {
+    os << command.action_;
     return os;
 }
 
@@ -23,8 +23,8 @@ std::ostream& operator << (std::ostream& os, const Constant& constant) {
 
 std::ostream& operator << (std::ostream& os, const Module& module) {
     os << "Module: " << module.module_ << std::endl;
-    for (auto& action : module.actions_) {
-      os << action << std::endl;
+    for (auto& command : module.commands_) {
+      os << command << std::endl;
     }
     return os;
 }
@@ -45,7 +45,7 @@ std::string Formula::createExpression() const {
     return "formula " + formula_ + " = " + content_ + Configuration::configuration_identifier_;
 }
 
-std::string Action::createExpression() const {
+std::string Command::createExpression() const {
     if (overwrite_) {
         return action_  + "\t" + guard_ + "-> " + update_  + Configuration::overwrite_identifier_;
     }
@@ -65,7 +65,7 @@ YAML::Node YAML::convert<Module>::encode(const Module& rhs) {
     YAML::Node node;
     
     node.push_back(rhs.module_);
-    node.push_back(rhs.actions_);
+    node.push_back(rhs.commands_);
 
     return node;
 }
@@ -74,12 +74,12 @@ bool YAML::convert<Module>::decode(const YAML::Node& node, Module& rhs) {
     if (!node.Type() == NodeType::Map) {
       return false;
     }
-    rhs.actions_ = node["actions"].as<std::vector<Action>>();
+    rhs.commands_ = node["commands"].as<std::vector<Command>>();
     rhs.module_ = node["module"].as<std::string>();
     return true;
 }
 
-YAML::Node YAML::convert<Action>::encode(const Action& rhs) {
+YAML::Node YAML::convert<Command>::encode(const Command& rhs) {
     YAML::Node node;
 
     node.push_back(rhs.action_);
@@ -90,7 +90,7 @@ YAML::Node YAML::convert<Action>::encode(const Action& rhs) {
     return node;
 }
 
-bool YAML::convert<Action>::decode(const YAML::Node& node, Action& rhs) {
+bool YAML::convert<Command>::decode(const YAML::Node& node, Command& rhs) {
     if (!node.Type() == NodeType::Map) {
         return false;
     }
@@ -244,8 +244,8 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
                 configuration.push_back({formula.createExpression(), formula.formula_ ,ConfigType::Formula, formula.overwrite_});
             }
             for (auto& module : modules) {
-                for (auto& action : module.actions_) {
-                    configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_, action.index_});
+                for (auto& command : module.commands_) {
+                    configuration.push_back({command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.index_});
                 }
             }
             for (auto& constant : constants) {
