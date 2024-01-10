@@ -105,6 +105,7 @@ namespace prism {
       float const probIntended;
       std::vector<Configuration> configuration;
       std::vector<ViewDirection> viewDirections = {0, 1, 2, 3};
+      std::map<ViewDirection, std::string> viewDirectionToString = {{0, "East"}, {1, "South"}, {2, "West"}, {3, "North"}};
 
       std::map<AgentName, std::set<std::pair<ActionId, std::string>>> agentNameActionMap;
   };

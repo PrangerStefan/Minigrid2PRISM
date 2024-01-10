@@ -20,26 +20,26 @@ std::string vectorToDisjunction(const std::vector<std::string> &formulae) {
 }
 
 std::string cellToConjunction(const AgentName &agentName, const cell &c) {
-  return "x" + agentName + "=" + std::to_string(c.column) + "&y" + agentName + "=" + std::to_string(c.row);
+  return "col" + agentName + "=" + std::to_string(c.column) + "&row" + agentName + "=" + std::to_string(c.row);
 }
 
 std::string cellToConjunctionWithOffset(const AgentName &agentName, const cell &c, const std::string &xOffset, const std::string &yOffset){
-  return "x" + agentName + xOffset + "=" + std::to_string(c.column) + "&y" + agentName + yOffset + "=" + std::to_string(c.row);
+  return "col" + agentName + xOffset + "=" + std::to_string(c.column) + "&row" + agentName + yOffset + "=" + std::to_string(c.row);
 }
 
 std::string coordinatesToConjunction(const AgentName &agentName, const coordinates &c, const ViewDirection viewDirection) {
-  return "x" + agentName + "=" + std::to_string(c.first) + "&y" + agentName + "=" + std::to_string(c.second) + "&view" + agentName + "=" + std::to_string(viewDirection);
+  return "col" + agentName + "=" + std::to_string(c.first) + "&row" + agentName + "=" + std::to_string(c.second) + "&view" + agentName + "=" + std::to_string(viewDirection);
 }
 
 std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition) {
   std::string xOffset = oneOffToString(relativePosition.first);
   std::string yOffset = oneOffToString(relativePosition.second);
-  return "x" + agentName + xOffset + "=x" + identifier + "&y" + agentName + yOffset + "=y" + identifier;
+  return "col" + agentName + xOffset + "=col" + identifier + "&row" + agentName + yOffset + "=row" + identifier;
 }
 std::string objectPositionToConjunction(const AgentName &agentName, const std::string &identifier, const std::pair<int, int> &relativePosition, const ViewDirection viewDirection) {
   std::string xOffset = oneOffToString(relativePosition.first);
   std::string yOffset = oneOffToString(relativePosition.second);
-  return "x" + agentName + xOffset + "=x" + identifier + "&y" + agentName + yOffset + "=y" + identifier + "&view" + agentName + "=" + std::to_string(viewDirection);
+  return "col" + agentName + xOffset + "=col" + identifier + "&row" + agentName + yOffset + "=row" + identifier + "&view" + agentName + "=" + std::to_string(viewDirection);
 }
 
 std::map<ViewDirection, coordinates> getAdjacentCells(const cell &c) {
@@ -158,7 +158,7 @@ namespace prism {
       std::string identifier = capitalize(box.getColor()) + box.getType();
       os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
     }
-    os << ";\n";
+    if(!semicolon) os << ";\n";
   }
 
   std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon) {
