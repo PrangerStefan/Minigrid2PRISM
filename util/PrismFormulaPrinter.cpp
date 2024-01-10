@@ -158,7 +158,7 @@ namespace prism {
       std::string identifier = capitalize(box.getColor()) + box.getType();
       os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
     }
-    os << ";\n";
+    if(!semicolon) os << ";\n";
   }
 
   std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon) {
