@@ -78,6 +78,10 @@ namespace prism {
       }
     }
 
+    if (!configuration.empty()) {
+      printConfiguration(configuration);
+    }
+
     return os;
   }
 
