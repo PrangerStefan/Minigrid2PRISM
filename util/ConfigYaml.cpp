@@ -103,7 +103,12 @@ bool YAML::convert<Command>::decode(const YAML::Node& node, Command& rhs) {
         rhs.overwrite_ = node["overwrite"].as<bool>();
     }
     if (node["index"]) {
-        rhs.index_ = node["index"].as<int>();
+        try {
+            rhs.index_ = node["index"].as<std::vector<int>>();
+        }
+        catch(const std::exception& e) {
+            rhs.index_ = {node["index"].as<int>()};
+        }   
     }
 
     return true;
@@ -251,7 +256,7 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
             for (auto& constant : constants) {
                 // std::cout << constant.constant_ << std::endl;
                 configuration.push_back({constant.createExpression(), "const " + constant.type_ + " " + constant.constant_, ConfigType::Constant, constant.overwrite_});
-            }
+            }            
         }
         catch(const std::exception& e) {
             std::cout << "Exception '" << typeid(e).name() << "' caught:" << std::endl;

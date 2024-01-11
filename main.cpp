@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
     if(ok) {
       Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, probIntended, faultyProbability);
 
-      grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
+      // grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
       std::stringstream ss;
       // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
       grid.printToPrism(ss, configurations , gridOptions.getModelType());

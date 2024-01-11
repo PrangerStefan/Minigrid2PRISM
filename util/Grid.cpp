@@ -104,29 +104,30 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
     if (!config.overwrite_) {
       continue;
     }
-      size_t start_pos;
+      for (auto& index : config.index_) {
+        size_t start_pos;
+        std::string search;      
 
-      if (config.type_ == ConfigType::Formula) {
-        start_pos = str.find("formula " + config.identifier_);
-      } else if (config.type_ == ConfigType::Label) {
-        start_pos = str.find("label " + config.identifier_);
-      } else if (config.type_ == ConfigType::Module) {
-        auto iter = boost::find_nth(str, config.identifier_, config.index_);
+        if (config.type_ == ConfigType::Formula) {
+          search = "formula " + config.identifier_;
+        } else if (config.type_ == ConfigType::Label) {
+          search = "label " + config.identifier_;
+        } else if (config.type_ == ConfigType::Module) {
+          search = config.identifier_;
+        }
+        else if (config.type_ == ConfigType::Constant) {
+          search = config.identifier_;
+        }
+
+        auto iter = boost::find_nth(str, search, index);
         start_pos = std::distance(str.begin(), iter.begin());
-      }
-       else if (config.type_ == ConfigType::Constant) {
-        start_pos = str.find(config.identifier_);
+        size_t end_pos = str.find(';', start_pos) + 1;
 
-        if (start_pos == std::string::npos) {
-          std::cout << "Couldn't find overwrite:" << config.expression_ << std::endl;
+        if (end_pos != std::string::npos && end_pos != 0) {
+          std::string expression = config.expression_;
+          str.replace(start_pos, end_pos - start_pos , expression);
         }
       }
-
-      size_t end_pos = str.find(';', start_pos) + 1;
-
-      std::string expression = config.expression_;
-
-      str.replace(start_pos, end_pos - start_pos , expression);
   }
 }
 void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration ,const prism::ModelType& modelType) {
