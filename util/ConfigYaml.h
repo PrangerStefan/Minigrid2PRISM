@@ -22,7 +22,7 @@ struct Configuration
   std::string module_ {};
   std::string expression_{};
   std::string identifier_{};
-  std::vector<int> index_{0};
+  std::vector<int> indexes_{0};
 
   ConfigType type_ {ConfigType::Label};
   bool overwrite_ {false};
@@ -33,7 +33,7 @@ struct Configuration
                 , ConfigType type
                 , bool overwrite = false
                 , std::string module = ""
-                , std::vector<int> index = {0}) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, index_(index) {}
+                , std::vector<int> indexes = {0}) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, indexes_(indexes) {}
   
   ~Configuration() = default;
   Configuration(const Configuration&) = default;
@@ -100,7 +100,7 @@ struct Command {
   std::string action_;
   std::string guard_;
   std::string update_;
-  std::vector<int> index_{0};
+  std::vector<int> indexes_{0};
   bool overwrite_ {false};
 
   std::string createExpression() const;

@@ -104,7 +104,7 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
     if (!config.overwrite_) {
       continue;
     }
-      for (auto& index : config.index_) {
+      for (auto& index : config.indexes_) {
         size_t start_pos;
         std::string search;      
 

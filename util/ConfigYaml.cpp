@@ -104,10 +104,10 @@ bool YAML::convert<Command>::decode(const YAML::Node& node, Command& rhs) {
     }
     if (node["index"]) {
         try {
-            rhs.index_ = node["index"].as<std::vector<int>>();
+            rhs.indexes_ = node["index"].as<std::vector<int>>();
         }
         catch(const std::exception& e) {
-            rhs.index_ = {node["index"].as<int>()};
+            rhs.indexes_ = {node["index"].as<int>()};
         }   
     }
 
@@ -250,7 +250,7 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
             }
             for (auto& module : modules) {
                 for (auto& command : module.commands_) {
-                    configuration.push_back({command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.index_});
+                    configuration.push_back({command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.indexes_});
                 }
             }
             for (auto& constant : constants) {
