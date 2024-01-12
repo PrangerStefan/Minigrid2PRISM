@@ -79,8 +79,8 @@ namespace prism {
     } else {
       os << buildFormula(agentName + "IsOnSlippery", "false");
     }
-    printIsOnFormula(agentName, "Lava", lava);
-    printIsOnFormula(agentName, "Goal", goals);
+    if(!lava.empty())  printIsOnFormula(agentName, "Lava", lava);
+    if(!goals.empty()) printIsOnFormula(agentName, "Goal", goals);
 
     for(const auto& ball : balls) {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
@@ -115,8 +115,6 @@ namespace prism {
     if(conditionalMovementRestrictions.size() > 0) {
       os << buildFormula(agentName + "CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
       os << buildFormula(agentName + "IsCarrying", vectorToDisjunction(portableObjects));
-    } else {
-      os << buildFormula(agentName + "CannotMoveConditionally", "false");
     }
   }
 

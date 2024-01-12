@@ -16,8 +16,8 @@ std::string westUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"-1)"; }
 
 namespace prism {
 
-  PrismModulesPrinter::PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability)
-    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), faultyProbability(faultyProbability) {
+  PrismModulesPrinter::PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals)
+    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), faultyProbability(faultyProbability), anyLava(anyLava), anyGoals(anyGoals) {
       numberOfPlayer = agentNameAndPositionMap.size();
       size_t index = 0;
       for(auto begin = agentNameAndPositionMap.begin(); begin != agentNameAndPositionMap.end(); begin++, index++) {
@@ -104,9 +104,9 @@ namespace prism {
   void PrismModulesPrinter::printPortableObjectModule(const cell &object) {
     std::string identifier = capitalize(object.getColor()) + object.getType();
     os << "\nmodule " << identifier << std::endl;
-    os << "\tx" << identifier << " : [-1.." << maxBoundaries.second  << "] init " << object.column << ";\n";
-    os << "\ty" << identifier << " : [-1.." << maxBoundaries.first << "] init " << object.row << ";\n";
-    os << "\t" << identifier << "PickedUp : bool;\n";
+    os << "  x" << identifier << " : [-1.." << maxBoundaries.second  << "] init " << object.column << ";\n";
+    os << "  y" << identifier << " : [-1.." << maxBoundaries.first << "] init " << object.row << ";\n";
+    os << "  " << identifier << "PickedUp : bool;\n";
     os << "\n";
 
     for(const auto [name, position] : agentNameAndPositionMap) {
@@ -118,25 +118,25 @@ namespace prism {
   void PrismModulesPrinter::printPortableObjectActions(const std::string &agentName, const std::string &identifier) {
     std::string actionName = "[" + agentName + "_pickup_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " true -> (x" << identifier << "'=-1) & (y" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
+    os << "  " << actionName << " true -> (x" << identifier << "'=-1) & (y" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_north]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_west]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << "-1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << "-1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_south]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_east]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " " << " ttrue -> (x" << identifier << "'=x" << agentName << "+1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " ttrue -> (x" << identifier << "'=x" << agentName << "+1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
   }
 
   void PrismModulesPrinter::printDoorModule(const cell &door, const bool &opened) {
     std::string identifier = capitalize(door.getColor()) + door.getType();
     os << "\nmodule " << identifier << std::endl;
-    os << "\t" << identifier << "Open : bool init false;\n";
+    os << "  " << identifier << "Open : bool init false;\n";
     os << "\n";
 
     if(opened) {
@@ -154,26 +154,26 @@ namespace prism {
   void PrismModulesPrinter::printLockedDoorActions(const std::string &agentName, const std::string &identifier) {
     std::string actionName = "[" + agentName + "_unlock_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
+    os << "  " << actionName << " !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
     actionName = "[" + agentName + "_close_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << actionName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
+    os << "  " << actionName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printUnlockedDoorActions(const std::string &agentName, const std::string &identifier) {
     std::string actionName = "[" + agentName + "_open_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
+    os << "   !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
     actionName = "[" + agentName + "_close_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "\t" << agentName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
+    os << "  " << agentName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
     os << "\nmodule " << agentName << std::endl;
-    os << "\tcol"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
-    os << "\trow"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
-    os << "\tview" << agentName << " : [0..3] init 1;\n";
+    os << "  col"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
+    os << "  row"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
+    os << "  view" << agentName << " : [0..3] init 1;\n";
 
     printTurnActionsForRobot(agentName);
     printMovementActionsForRobot(agentName);
@@ -192,19 +192,19 @@ namespace prism {
 
     for(const auto &key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << "\t" << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
     for(const auto &ball : balls) {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      os << "\t" << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
     for(const auto &box : boxes) {
       std::string identifier = capitalize(box.getColor()) + box.getType();
-      os << "\t" << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
@@ -214,23 +214,23 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printPortableObjectActionsForRobot(const std::string &a, const std::string &i) {
-    actionStream << "\t[" << a << "_pickup_" << i << "] "      << " !" << a << "IsCarrying & " <<  a << "CannotMove" << i << " -> (" << a << "Carrying" << i << "'=true);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_north]\t" << a << "Carrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_west] \t" << a << "Carrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_south]\t" << a << "Carrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (" << a << "Carrying" << i << "'=false);\n";
-	  actionStream << "\t[" << a << "_drop_" << i << "_east] \t" << a << "Carrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (" << a << "Carrying" << i << "'=false);\n";
+    actionStream << "  [" << a << "_pickup_" << i << "] "      << " !" << a << "IsCarrying & " <<  a << "CannotMove" << i << " -> (" << a << "Carrying" << i << "'=true);\n";
+	  actionStream << "  [" << a << "_drop_" << i << "_north]\t" << a << "Carrying" << i << " & view" << a << "=3 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveNorthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "  [" << a << "_drop_" << i << "_west] \t" << a << "Carrying" << i << " & view" << a << "=2 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveWestWall  -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "  [" << a << "_drop_" << i << "_south]\t" << a << "Carrying" << i << " & view" << a << "=1 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveSouthWall -> (" << a << "Carrying" << i << "'=false);\n";
+	  actionStream << "  [" << a << "_drop_" << i << "_east] \t" << a << "Carrying" << i << " & view" << a << "=0 & !" << a << "CannotMoveConditionally & !" << a << "CannotMoveEastWall  -> (" << a << "Carrying" << i << "'=false);\n";
     actionStream << "\n";
   }
 
   void PrismModulesPrinter::printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier) {
-    actionStream << "\t[" << agentName << "_open_" << identifier  << "] " << agentName << "CannotMove" << identifier << " -> true;\n";
-    actionStream << "\t[" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"     << identifier << " -> true;\n";
+    actionStream << "  [" << agentName << "_open_" << identifier  << "] " << agentName << "CannotMove" << identifier << " -> true;\n";
+    actionStream << "  [" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"     << identifier << " -> true;\n";
     actionStream << "\n";
   }
 
   void PrismModulesPrinter::printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key) {
-    actionStream << "\t[" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
-    actionStream << "\t[" << agentName << "_close_" << identifier << "] "   << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "  [" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "  [" << agentName << "_close_" << identifier << "] "   << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
     actionStream << "\n";
   }
 
@@ -248,7 +248,7 @@ namespace prism {
     if(faultyBehaviour()) {
       std::string actionName = "[" + a + "_stuck]";
       agentNameActionMap.at(a).insert({FORWARD, actionName});
-      actionStream << "\t" << actionName << " " << "previousAction" << a << "=" << std::to_string(FORWARD);
+      actionStream << "  " << actionName << " " << "previousAction" << a << "=" << std::to_string(FORWARD);
       actionStream << " & ((view" << a << "=0 & " << a << "CannotMoveEastWall) |";
       actionStream <<    " (view" << a << "=1 & " << a << "CannotMoveSouthWall) |";
       actionStream <<    " (view" << a << "=2 & " << a << "CannotMoveWestWall) |";
@@ -259,7 +259,14 @@ namespace prism {
   std::string PrismModulesPrinter::printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection) {
     std::string actionName = "[" + a + "_move_" + direction + "]";
     agentNameActionMap.at(a).insert({FORWARD, actionName});
-    return "\t" + actionName + " " + viewVariable(a, viewDirection) + " !" + a + "IsOnSlippery & !" + a + "IsOnLava & !" + a + "IsOnGoal & !" + a + "CannotMove" + direction + "Wall &!" + a + "CannotMoveConditionally -> ";
+    std::string guard = "  " + actionName + " " + viewVariable(a, viewDirection);
+    if(slipperyBehaviour()) guard += " & !" + a + "IsOnSlippery";
+    if(anyLava)             guard += " & !" + a + "IsOnLava";
+    if(anyGoals)            guard += " & !" + a + "IsOnGoal";
+    guard += " & !" + a + "CannotMove" + direction + "Wall";
+    if(anyPortableObject()) guard += " & !" + a + "CannotMoveConditionally";
+    guard += " -> ";
+    return guard;
   }
 
   std::string PrismModulesPrinter::printMovementUpdate(const AgentName &a, const update &u) const {
@@ -269,7 +276,7 @@ namespace prism {
   std::string PrismModulesPrinter::printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond) {
     std::string actionName = "[" + a + "_turn_" + direction + "]";
     agentNameActionMap.at(a).insert({actionId, actionName});
-    return "\t" + actionName + " " + cond + " -> ";
+    return "  " + actionName + " " + cond + " -> ";
   }
 
   std::string PrismModulesPrinter::printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const {
@@ -442,7 +449,7 @@ namespace prism {
   std::string PrismModulesPrinter::printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards) {
     std::string actionName = "[" + a + "_move_" + viewDirectionToString.at(viewDirection) + "]";
     agentNameActionMap.at(a).insert({FORWARD, actionName});
-    return "\t" + actionName + " " + viewVariable(a, viewDirection) + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
+    return "  " + actionName + " " + viewVariable(a, viewDirection) + " & " + a + "IsOnSlippery" + direction + " & " + buildConjunction(a, guards) + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const {
@@ -452,7 +459,7 @@ namespace prism {
   std::string PrismModulesPrinter::printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond) {
     std::string actionName = "[" + a + "_turn_" + direction + "]";
     agentNameActionMap.at(a).insert({actionId, actionName});
-    return "\t" + actionName + " " + buildConjunction(a, guards) + " & " + cond + " -> ";
+    return "  " + actionName + " " + buildConjunction(a, guards) + " & " + cond + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyTurnUpdate(const AgentName &a, const updates &u) {
@@ -461,21 +468,21 @@ namespace prism {
 
   void PrismModulesPrinter::printFaultyMovementModule(const AgentName &a) {
     os << "\nmodule " << a << "FaultyBehaviour" << std::endl;
-    os << "\tpreviousAction" << a << " : [-1..2] init -1;\n";
+    os << "  previousAction" << a << " : [-1..2] init -1;\n";
 
     for(const auto [actionId, actionName] : agentNameActionMap.at(a)) {
-      os << "\t" << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
+      os << "  " << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
     }
     os << "endmodule\n\n";
   }
 
   void PrismModulesPrinter::printMoveModule() {
     os << "\nmodule " << "Arbiter" << std::endl;
-    os << "\tclock : [0.." << agentIndexMap.size() - 1 << "] init 0;\n";
+    os << "  clock : [0.." << agentIndexMap.size() - 1 << "] init 0;\n";
 
     for(const auto [agentName, actions] : agentNameActionMap) {
       for(const auto [actionId, actionName] : actions) {
-        os << "\t" << actionName << " " << moveGuard(agentName) << " -> " << moveUpdate(agentName) << ";\n";
+        os << "  " << actionName << " " << moveGuard(agentName) << " -> " << moveUpdate(agentName) << ";\n";
       }
     }
     os << "endmodule\n\n";
@@ -492,7 +499,7 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printDoneActions(const AgentName &agentName) {
-    os << "\t[" << agentName << "_done]" << moveGuard(agentName) << agentName << "IsInGoal | " << agentName << "IsInLava -> (" << agentName << "Done'=true);\n";
+    os << "  [" << agentName << "_done]" << moveGuard(agentName) << agentName << "IsInGoal | " << agentName << "IsInLava -> (" << agentName << "Done'=true);\n";
   }
 
   void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName) {
@@ -618,7 +625,7 @@ namespace prism {
   }
 
   std::string PrismModulesPrinter::viewVariable(const AgentName &agentName, const size_t &agentDirection) const {
-    return "view" + agentName + "=" + std::to_string(agentDirection) + " & ";
+    return "view" + agentName + "=" + std::to_string(agentDirection);
   }
 
   bool PrismModulesPrinter::anyPortableObject() const {

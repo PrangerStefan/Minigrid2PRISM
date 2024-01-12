@@ -16,7 +16,7 @@ std::string westUpdate(const AgentName &a);
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability);
+      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
 
       std::ostream& print();
 
@@ -97,6 +97,9 @@ namespace prism {
       cells unlockedDoors;
       cells keys;
       std::map<std::string, cells> slipperyTiles;
+
+      const bool anyLava;
+      const bool anyGoals;
 
       AgentNameAndPositionMap agentNameAndPositionMap;
       std::map<AgentName, size_t> agentIndexMap;
