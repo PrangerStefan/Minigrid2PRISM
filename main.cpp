@@ -42,21 +42,30 @@ void print_info(boost::spirit::info const& what) {
   boost::apply_visitor(walker, what.value);
 }
 
+void setProbability(const std::string& gridProperties, const std::vector<Probability> configProperties, const std::string& identifier, float& prop) {
+  auto start_pos = gridProperties.find(identifier);
+  std::string seperator = ";";
+
+  if (start_pos != std::string::npos) {
+    auto end_pos = gridProperties.find('\n', start_pos);
+    auto value = gridProperties.substr(start_pos + identifier.length()  + seperator.size(), end_pos - start_pos - identifier.length()); 
+    prop = std::stod(value);
+  }
+
+  auto yaml_config_prop = std::find_if(configProperties.begin(), configProperties.end(), [&identifier](const Probability&  obj) -> bool {return obj.probability_ == identifier;} );
+
+  if (yaml_config_prop != configProperties.end()) {
+    prop = (*yaml_config_prop).value_;    
+  }
+}
+
+
 int main(int argc, char* argv[]) {
   popl::OptionParser optionParser("Allowed options");
 
   auto helpOption = optionParser.add<popl::Switch>("h", "help", "Print this help message.");
   auto inputFilename = optionParser.add<popl::Value<std::string>>("i", "input-file", "Filename of the input file.");
   auto outputFilename = optionParser.add<popl::Value<std::string>>("o", "output-file", "Filename for the output file.");
-
-  auto agentsToBeConsidered = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("a", "agents", "Which parsed agents should be considered in the output. WIP.");
-  auto viewForAgents = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("v", "view", "Agents for which the 'view'('direction') variable should be included. WIP.");
-
-  auto probabilisticBehaviourAgents = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("p", "prob-beh", "Agents for which we want to include probabilistic actions");
-  auto probabilities = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("q", "probs", "The probabilities for which probabilistic actions should be added. WIP");
-
-  auto enforceOneWays = optionParser.add<popl::Switch>("f", "force-oneways", "Enforce encoding of oneways. This entails that slippery tiles do not allow turning and have prob 1 to shift the agent by one and makes turning impossible if in a one tile wide section of the grid.");
-
   auto configFilename = optionParser.add<popl::Value<std::string>, popl::Attribute::optional>("c", "config-file", "Filename of the predicate configuration file.");
 
 
@@ -75,35 +84,6 @@ int main(int argc, char* argv[]) {
 	}
 
   GridOptions gridOptions = { {}, {} };
-  if(agentsToBeConsidered->is_set()) {
-    gridOptions.agentsToBeConsidered = parseCommaSeparatedString(agentsToBeConsidered->value(0));
-  }
-  if(viewForAgents->is_set()) {
-    gridOptions.agentsWithView = parseCommaSeparatedString(viewForAgents->value(0));
-  }
-  if(enforceOneWays->is_set()) {
-    gridOptions.enforceOneWays = true;
-  }
-  if(probabilisticBehaviourAgents->is_set()) {
-    gridOptions.agentsWithProbabilisticBehaviour = parseCommaSeparatedString(probabilisticBehaviourAgents->value(0));
-    for(auto const& a : gridOptions.agentsWithProbabilisticBehaviour) {
-      std::cout << a << std::endl;
-    }
-    if(probabilities->is_set()) {
-      std::vector<std::string> parsedStrings = parseCommaSeparatedString(probabilities->value(0));
-
-      std::transform(parsedStrings.begin(), parsedStrings.end(), std::back_inserter(gridOptions.probabilitiesForActions), [](const std::string& string) {
-        return std::stof(string);
-      });
-      for(auto const& a : gridOptions.probabilitiesForActions) {
-        std::cout << a << std::endl;
-      }
-    } else {
-      throw std::logic_error{ "When adding agents with probabilistic behaviour, you also need to specify a list of probabilities via --probs." };
-    }
-  }
-
-
   std::fstream file {outputFilename->value(0), file.trunc | file.out};
   std::fstream infile {inputFilename->value(0), infile.in};
   std::string line, content, background, rewards, properties;
@@ -148,9 +128,11 @@ int main(int argc, char* argv[]) {
   cells contentCells;
   cells backgroundCells;
   std::vector<Configuration> configurations;
+  std::vector<Probability> probabilities;
   std::map<coordinates, float> stateRewards;
-  float faultyProbability = 0.0;
+  float faultyProbability = 0.1;
   float probIntended = 0.9;
+  float probTurnIntended = 1;
 
   try {
     bool ok = phrase_parse(contentIter, contentLast, contentParser, qi::space, contentCells);
@@ -159,7 +141,9 @@ int main(int argc, char* argv[]) {
     // TODO }
     if (configFilename->is_set()) {
       YamlConfigParser parser(configFilename->value(0));
-      configurations = parser.parseConfiguration();
+      auto parseResult = parser.parseConfiguration();
+      configurations = parseResult.configurations_;
+      probabilities = parseResult.probabilities_;
     }
 
     boost::escaped_list_separator<char> seps('\\', ';', '\n');
@@ -171,20 +155,18 @@ int main(int argc, char* argv[]) {
       stateRewards[std::make_pair(x,y)] = reward;
     }
     if (!properties.empty()) {
-      auto faultProbabilityIdentifier = std::string("FaultProbability:");
-      auto start_pos = properties.find(faultProbabilityIdentifier);
+      auto faultProbabilityIdentifier = std::string("FaultProbability");
+      auto probForwardIntendedIdentifier = std::string("ProbForwardIntended");
+      auto probTurnIntendedIdentifier = std::string("ProbTurnIntended");
 
-
-      if (start_pos != std::string::npos) {
-        auto end_pos = properties.find('\n', start_pos);
-        auto value = properties.substr(start_pos + faultProbabilityIdentifier.length(), end_pos - start_pos - faultProbabilityIdentifier.length());
-        faultyProbability = std::stod(value);
-      }
+      setProbability(properties, probabilities, faultProbabilityIdentifier, faultyProbability);
+      setProbability(properties, probabilities, probForwardIntendedIdentifier, probIntended);
+      setProbability(properties, probabilities, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
       Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, probIntended, faultyProbability);
 
-      grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
+      // grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
       std::stringstream ss;
       // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
       grid.printToPrism(ss, configurations , gridOptions.getModelType());

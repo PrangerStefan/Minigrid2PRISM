@@ -11,8 +11,8 @@ std::ostream& operator << (std::ostream &os, const Formula& formula) {
     return os;
 }
 
-std::ostream& operator << (std::ostream& os, const Action& action) {
-    os << action.action_;
+std::ostream& operator << (std::ostream& os, const Command& command) {
+    os << command.action_;
     return os;
 }
 
@@ -23,8 +23,8 @@ std::ostream& operator << (std::ostream& os, const Constant& constant) {
 
 std::ostream& operator << (std::ostream& os, const Module& module) {
     os << "Module: " << module.module_ << std::endl;
-    for (auto& action : module.actions_) {
-      os << action << std::endl;
+    for (auto& command : module.commands_) {
+      os << command << std::endl;
     }
     return os;
 }
@@ -45,7 +45,7 @@ std::string Formula::createExpression() const {
     return "formula " + formula_ + " = " + content_ + Configuration::configuration_identifier_;
 }
 
-std::string Action::createExpression() const {
+std::string Command::createExpression() const {
     if (overwrite_) {
         return action_  + "\t" + guard_ + "-> " + update_  + Configuration::overwrite_identifier_;
     }
@@ -65,7 +65,7 @@ YAML::Node YAML::convert<Module>::encode(const Module& rhs) {
     YAML::Node node;
     
     node.push_back(rhs.module_);
-    node.push_back(rhs.actions_);
+    node.push_back(rhs.commands_);
 
     return node;
 }
@@ -74,12 +74,12 @@ bool YAML::convert<Module>::decode(const YAML::Node& node, Module& rhs) {
     if (!node.Type() == NodeType::Map) {
       return false;
     }
-    rhs.actions_ = node["actions"].as<std::vector<Action>>();
+    rhs.commands_ = node["commands"].as<std::vector<Command>>();
     rhs.module_ = node["module"].as<std::string>();
     return true;
 }
 
-YAML::Node YAML::convert<Action>::encode(const Action& rhs) {
+YAML::Node YAML::convert<Command>::encode(const Command& rhs) {
     YAML::Node node;
 
     node.push_back(rhs.action_);
@@ -90,7 +90,7 @@ YAML::Node YAML::convert<Action>::encode(const Action& rhs) {
     return node;
 }
 
-bool YAML::convert<Action>::decode(const YAML::Node& node, Action& rhs) {
+bool YAML::convert<Command>::decode(const YAML::Node& node, Command& rhs) {
     if (!node.Type() == NodeType::Map) {
         return false;
     }
@@ -103,7 +103,12 @@ bool YAML::convert<Action>::decode(const YAML::Node& node, Action& rhs) {
         rhs.overwrite_ = node["overwrite"].as<bool>();
     }
     if (node["index"]) {
-        rhs.index_ = node["index"].as<int>();
+        try {
+            rhs.indexes_ = node["index"].as<std::vector<int>>();
+        }
+        catch(const std::exception& e) {
+            rhs.indexes_ = {node["index"].as<int>()};
+        }   
     }
 
     return true;
@@ -185,11 +190,32 @@ bool YAML::convert<Constant>::decode(const YAML::Node& node, Constant& rhs) {
     return true;
 }
 
+YAML::Node YAML::convert<Probability>::encode(const Probability& rhs) {
+    YAML::Node node;
+    
+    node.push_back(rhs.probability_);
+    node.push_back(rhs.value_);
+
+    return node;
+}
+
+bool YAML::convert<Probability>::decode(const YAML::Node& node, Probability& rhs) {
+    if (!node.IsDefined() || !node["probability"] || !node["value"]) {
+        return false;
+    }
+
+    rhs.probability_ = node["probability"].as<std::string>();
+    rhs.value_ = node["value"].as<double>();
+
+    return true;
+}
+
 const std::string Configuration::configuration_identifier_ { "; // created through configuration"};
 const std::string Configuration::overwrite_identifier_{"; // Overwritten through configuration"};
 
- std::vector<Configuration> YamlConfigParser::parseConfiguration() {
+YamlConfigParseResult YamlConfigParser::parseConfiguration() {
         std::vector<Configuration> configuration;
+        std::vector<Probability> probabilities;
 
         try {
             YAML::Node config = YAML::LoadFile(file_);  
@@ -211,6 +237,10 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             if (config["constants"]) {
                 constants = config["constants"].as<std::vector<Constant>>();
             }
+
+            if (config["probabilities"]) {
+                probabilities = config["probabilities"].as<std::vector<Probability>>();
+            }
         
             for (auto& label : labels) {
                 configuration.push_back({label.createExpression(), label.label_ , ConfigType::Label, label.overwrite_});
@@ -219,14 +249,14 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
                 configuration.push_back({formula.createExpression(), formula.formula_ ,ConfigType::Formula, formula.overwrite_});
             }
             for (auto& module : modules) {
-                for (auto& action : module.actions_) {
-                    configuration.push_back({action.createExpression(), action.action_, ConfigType::Module, action.overwrite_, module.module_, action.index_});
+                for (auto& command : module.commands_) {
+                    configuration.push_back({command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.indexes_});
                 }
             }
             for (auto& constant : constants) {
                 // std::cout << constant.constant_ << std::endl;
                 configuration.push_back({constant.createExpression(), "const " + constant.type_ + " " + constant.constant_, ConfigType::Constant, constant.overwrite_});
-            }
+            }            
         }
         catch(const std::exception& e) {
             std::cout << "Exception '" << typeid(e).name() << "' caught:" << std::endl;
@@ -234,5 +264,5 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
             std::cout << "while parsing configuration " << file_ << std::endl;
         }
 
-        return configuration;
+        return YamlConfigParseResult(configuration, probabilities);
 }
