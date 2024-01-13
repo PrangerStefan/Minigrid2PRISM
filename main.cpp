@@ -23,15 +23,15 @@ std::vector<std::string> parseCommaSeparatedString(std::string const& str) {
 
 
 struct printer {
-    typedef boost::spirit::utf8_string string;
+  typedef boost::spirit::utf8_string string;
 
-    void element(string const& tag, string const& value, int depth) const {
-        for (int i = 0; i < (depth*4); ++i) std::cout << ' ';
+  void element(string const& tag, string const& value, int depth) const {
+    for (int i = 0; i < (depth*4); ++i) std::cout << ' ';
 
-        std::cout << "tag: " << tag;
-        if (value != "") std::cout << ", value: " << value;
-        std::cout << std::endl;
-    }
+    std::cout << "tag: " << tag;
+    if (value != "") std::cout << ", value: " << value;
+    std::cout << std::endl;
+  }
 };
 
 void print_info(boost::spirit::info const& what) {
