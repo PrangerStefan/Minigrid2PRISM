@@ -27,11 +27,11 @@ class Grid {
     friend std::ostream& operator<<(std::ostream& os, const Grid &grid);
 
   private:
-    GridOptions gridOptions;
-
     cells allGridCells;
     cells background;
     coordinates maxBoundaries;
+
+    prism::ModelType modelType;
 
     cell agent;
     cells adversaries;

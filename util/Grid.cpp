@@ -61,6 +61,12 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
       backgroundTiles.emplace(color, cellsOfColor);
     }
   }
+
+  if(adversaries.empty()) {
+    modelType = prism::ModelType::MDP;
+  } else {
+    modelType = prism::ModelType::SMG;
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const Grid& grid) {
@@ -97,7 +103,7 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
     }
       for (auto& index : config.indexes_) {
         size_t start_pos;
-        std::string search;      
+        std::string search;
 
         if (config.type_ == ConfigType::Formula) {
           search = "formula " + config.identifier_;
