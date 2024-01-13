@@ -6,29 +6,20 @@
 #include <utility>
 
 #include "MinigridGrammar.h"
+#include "PrismPrinter.h"
 #include "PrismModulesPrinter.h"
 #include "PrismFormulaPrinter.h"
 #include "ConfigYaml.h"
 
-struct GridOptions {
-  std::vector<AgentName> agentsToBeConsidered;
-  std::vector<AgentName> agentsWithView;
-  std::vector<AgentName> agentsWithProbabilisticBehaviour;
-  std::vector<float>     probabilitiesForActions;
-  bool                   enforceOneWays;
-
-  prism::ModelType getModelType() const;
-};
-
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
+    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
 
     cells getGridCells();
 
     bool isBlocked(coordinates p);
     bool isWall(coordinates p);
-    void printToPrism(std::ostream &os, std::vector<Configuration>& configuration, const prism::ModelType& modelType);
+    void printToPrism(std::ostream &os, std::vector<Configuration>& configuration);
     void applyOverwrites(std::string& str, std::vector<Configuration>& configuration);
 
     std::array<bool, 8> getWalkableDirOf8Neighborhood(cell c);

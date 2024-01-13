@@ -83,7 +83,6 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-  GridOptions gridOptions = { {}, {} };
   std::fstream file {outputFilename->value(0), file.trunc | file.out};
   std::fstream infile {inputFilename->value(0), infile.in};
   std::string line, content, background, rewards, properties;
@@ -164,12 +163,11 @@ int main(int argc, char* argv[]) {
       setProbability(properties, probabilities, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
-      Grid grid(contentCells, backgroundCells, gridOptions, stateRewards, probIntended, faultyProbability);
+      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
 
-      // grid.printToPrism(std::cout, configurations , gridOptions.getModelType());
+      grid.printToPrism(std::cout, configurations);
       std::stringstream ss;
-      // grid.printToPrism(file, configurations ,prism::ModelType::MDP);
-      grid.printToPrism(ss, configurations , gridOptions.getModelType());
+      grid.printToPrism(ss, configurations);
       std::string str = ss.str();
       grid.applyOverwrites(str, configurations);
       file << str;

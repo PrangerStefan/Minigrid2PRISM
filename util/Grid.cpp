@@ -3,16 +3,8 @@
 
 #include <algorithm>
 
-prism::ModelType GridOptions::getModelType() const
-{
-  if (agentsWithView.size() > 1) {
-    return prism::ModelType::SMG;
-  }
-  return prism::ModelType::MDP;
-}
-
-Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
-  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
+Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
+  : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
   maxBoundaries = std::make_pair(max.row - 1, max.column - 1);
@@ -38,7 +30,6 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
     std::string color = adversary.getColor();
     color.at(0) = std::toupper(color.at(0));
     try {
-      if(gridOptions.agentsToBeConsidered.size() != 0 && std::find(gridOptions.agentsToBeConsidered.begin(), gridOptions.agentsToBeConsidered.end(), color) == gridOptions.agentsToBeConsidered.end()) continue;
       auto success = agentNameAndPositionMap.insert({ color, adversary.getCoordinates() });
       floor.push_back(adversary);
       if(!success.second) {
@@ -130,9 +121,8 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
       }
   }
 }
-void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration ,const prism::ModelType& modelType) {
+void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration) {
   cells northRestriction, eastRestriction, southRestriction, westRestriction;
-
   cells walkable = floor;
   walkable.insert(walkable.end(), goals.begin(), goals.end());
   walkable.insert(walkable.end(), boxes.begin(), boxes.end());
