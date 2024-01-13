@@ -48,14 +48,14 @@ void setProbability(const std::string& gridProperties, const std::vector<Probabi
 
   if (start_pos != std::string::npos) {
     auto end_pos = gridProperties.find('\n', start_pos);
-    auto value = gridProperties.substr(start_pos + identifier.length()  + seperator.size(), end_pos - start_pos - identifier.length()); 
+    auto value = gridProperties.substr(start_pos + identifier.length()  + seperator.size(), end_pos - start_pos - identifier.length());
     prop = std::stod(value);
   }
 
   auto yaml_config_prop = std::find_if(configProperties.begin(), configProperties.end(), [&identifier](const Probability&  obj) -> bool {return obj.probability_ == identifier;} );
 
   if (yaml_config_prop != configProperties.end()) {
-    prop = (*yaml_config_prop).value_;    
+    prop = (*yaml_config_prop).value_;
   }
 }
 
