@@ -276,7 +276,10 @@ namespace prism {
   std::string PrismModulesPrinter::printTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::string &cond) {
     std::string actionName = "[" + a + "_turn_" + direction + "]";
     agentNameActionMap.at(a).insert({actionId, actionName});
-    return "  " + actionName + " " + cond + " -> ";
+    std::string guard = "  " + actionName;
+    if(slipperyBehaviour()) guard += " !" + a + "IsOnSlippery & ";
+    guard += cond + " -> ";
+    return guard;
   }
 
   std::string PrismModulesPrinter::printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const {
@@ -459,7 +462,7 @@ namespace prism {
   std::string PrismModulesPrinter::printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond) {
     std::string actionName = "[" + a + "_turn_" + direction + "]";
     agentNameActionMap.at(a).insert({actionId, actionName});
-    return "  " + actionName + " " + buildConjunction(a, guards) + " & " + cond + " -> ";
+    return "  " + actionName + " " + a + "IsOnSlippery & " + buildConjunction(a, guards) + " & " + cond + " -> ";
   }
 
   std::string PrismModulesPrinter::printSlipperyTurnUpdate(const AgentName &a, const updates &u) {
