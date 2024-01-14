@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     if(ok) {
       Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
 
-      grid.printToPrism(std::cout, configurations);
+      //grid.printToPrism(std::cout, configurations);
       std::stringstream ss;
       grid.printToPrism(ss, configurations);
       std::string str = ss.str();
