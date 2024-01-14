@@ -104,8 +104,8 @@ namespace prism {
   void PrismModulesPrinter::printPortableObjectModule(const cell &object) {
     std::string identifier = capitalize(object.getColor()) + object.getType();
     os << "\nmodule " << identifier << std::endl;
-    os << "  x" << identifier << " : [-1.." << maxBoundaries.second  << "] init " << object.column << ";\n";
-    os << "  y" << identifier << " : [-1.." << maxBoundaries.first << "] init " << object.row << ";\n";
+    os << "  col" << identifier << " : [-1.." << maxBoundaries.first  << "] init " << object.column << ";\n";
+    os << "  row" << identifier << " : [-1.." << maxBoundaries.second << "] init " << object.row << ";\n";
     os << "  " << identifier << "PickedUp : bool;\n";
     os << "\n";
 
@@ -118,19 +118,19 @@ namespace prism {
   void PrismModulesPrinter::printPortableObjectActions(const std::string &agentName, const std::string &identifier) {
     std::string actionName = "[" + agentName + "_pickup_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << actionName << " true -> (x" << identifier << "'=-1) & (y" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
+    os << "  " << actionName << " true -> (col" << identifier << "'=-1) & (row" << identifier << "'=-1) & (" << identifier << "PickedUp'=true);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_north]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (col" << identifier << "'=col" << agentName << ")   & (row" << identifier << "'=row" << agentName << "-1) & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_west]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << "-1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (col" << identifier << "'=col" << agentName << "-1) & (row" << identifier << "'=row" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_south]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << actionName << " " << " true -> (x" << identifier << "'=x" << agentName << ")   & (y" << identifier << "'=y" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (col" << identifier << "'=col" << agentName << ")   & (row" << identifier << "'=row" << agentName << "+1) & (" << identifier << "PickedUp'=false);\n";
     actionName = "[" + agentName + "_drop_" + identifier + "_east]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << actionName << " " << " ttrue -> (x" << identifier << "'=x" << agentName << "+1) & (y" << identifier << "'=y" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
+    os << "  " << actionName << " " << " true -> (col" << identifier << "'=col" << agentName << "+1) & (row" << identifier << "'=row" << agentName << ") & (" << identifier << "PickedUp'=false);\n";
   }
 
   void PrismModulesPrinter::printDoorModule(const cell &door, const bool &opened) {
@@ -171,8 +171,8 @@ namespace prism {
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
     os << "\nmodule " << agentName << std::endl;
-    os << "  col"    << agentName << " : [1.." << maxBoundaries.second  << "] init " << initialPosition.second << ";\n";
-    os << "  row"    << agentName << " : [1.." << maxBoundaries.first << "] init " << initialPosition.first << ";\n";
+    os << "  col"    << agentName << " : [1.." << maxBoundaries.first  << "] init " << initialPosition.first << ";\n";
+    os << "  row"    << agentName << " : [1.." << maxBoundaries.second << "] init " << initialPosition.second << ";\n";
     os << "  view" << agentName << " : [0..3] init 1;\n";
 
     printTurnActionsForRobot(agentName);
