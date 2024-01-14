@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#define NOFAULT -1
+#define NOFAULT 3
 #define LEFT 0
 #define RIGHT 1
 #define FORWARD 2
@@ -471,7 +471,7 @@ namespace prism {
 
   void PrismModulesPrinter::printFaultyMovementModule(const AgentName &a) {
     os << "\nmodule " << a << "FaultyBehaviour" << std::endl;
-    os << "  previousAction" << a << " : [-1..2] init -1;\n";
+    os << "  previousAction" << a << " : [0.." + std::to_string(NOFAULT) + "] init " + std::to_string(NOFAULT) + ";\n";
 
     for(const auto [actionId, actionName] : agentNameActionMap.at(a)) {
       os << "  " << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
