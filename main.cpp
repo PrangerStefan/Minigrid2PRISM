@@ -129,9 +129,9 @@ int main(int argc, char* argv[]) {
   std::vector<Configuration> configurations;
   std::vector<Probability> probabilities;
   std::map<coordinates, float> stateRewards;
-  float faultyProbability = 0.1;
-  float probIntended = 0.9;
-  float probTurnIntended = 1;
+  float faultyProbability = 0.0;
+  float probIntended = 1.0;
+  float probTurnIntended = 1.0;
 
   try {
     bool ok = phrase_parse(contentIter, contentLast, contentParser, qi::space, contentCells);
