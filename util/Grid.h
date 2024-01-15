@@ -13,7 +13,7 @@
 
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
+    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0, prism::ModelType mType = prism::ModelType::MDP);
 
     cells getGridCells();
 

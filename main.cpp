@@ -42,7 +42,7 @@ void print_info(boost::spirit::info const& what) {
   boost::apply_visitor(walker, what.value);
 }
 
-void setProbability(const std::string& gridProperties, const std::vector<Probability> configProperties, const std::string& identifier, float& prop) {
+void setProbability(const std::string& gridProperties, const std::vector<Property> configProperties, const std::string& identifier, float& prop) {
   auto start_pos = gridProperties.find(identifier);
   std::string seperator = ";";
 
@@ -52,7 +52,7 @@ void setProbability(const std::string& gridProperties, const std::vector<Probabi
     prop = std::stod(value);
   }
 
-  auto yaml_config_prop = std::find_if(configProperties.begin(), configProperties.end(), [&identifier](const Probability&  obj) -> bool {return obj.probability_ == identifier;} );
+  auto yaml_config_prop = std::find_if(configProperties.begin(), configProperties.end(), [&identifier](const Property&  obj) -> bool {return obj.property == identifier;} );
 
   if (yaml_config_prop != configProperties.end()) {
     prop = (*yaml_config_prop).value_;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
   cells contentCells;
   cells backgroundCells;
   std::vector<Configuration> configurations;
-  std::vector<Probability> probabilities;
+  std::vector<Property> parsed_properties;
   std::map<coordinates, float> stateRewards;
   float faultyProbability = 0.0;
   float probIntended = 1.0;
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
       YamlConfigParser parser(configFilename->value(0));
       auto parseResult = parser.parseConfiguration();
       configurations = parseResult.configurations_;
-      probabilities = parseResult.probabilities_;
+      parsed_properties = parseResult.properties_;
     }
 
     boost::escaped_list_separator<char> seps('\\', ';', '\n');
@@ -158,13 +158,25 @@ int main(int argc, char* argv[]) {
       auto probForwardIntendedIdentifier = std::string("ProbForwardIntended");
       auto probTurnIntendedIdentifier = std::string("ProbTurnIntended");
 
-      setProbability(properties, probabilities, faultProbabilityIdentifier, faultyProbability);
-      setProbability(properties, probabilities, probForwardIntendedIdentifier, probIntended);
-      setProbability(properties, probabilities, probTurnIntendedIdentifier, probTurnIntended);
+      setProbability(properties, parsed_properties, faultProbabilityIdentifier, faultyProbability);
+      setProbability(properties, parsed_properties, probForwardIntendedIdentifier, probIntended);
+      setProbability(properties, parsed_properties, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
-      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
+      auto modelTypeIter = std::find_if(parsed_properties.begin(), parsed_properties.end(), [](const Property&  obj) -> bool {return obj.property == "modeltype";});
+      prism::ModelType modelType = prism::ModelType::MDP;;
+      if (modelTypeIter != parsed_properties.end()) {
+        if ((*modelTypeIter).value_str_ == "smg") {
+          modelType = prism::ModelType::SMG;
+        } else {
+          modelType = prism::ModelType::MDP;
+        }
+      }
+      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability, modelType);
       
+  
+
+
       //grid.printToPrism(std::cout, configurations);
       std::stringstream ss;
       grid.printToPrism(ss, configurations);

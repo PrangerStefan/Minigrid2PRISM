@@ -202,22 +202,27 @@ bool YAML::convert<Constant>::decode(const YAML::Node& node, Constant& rhs) {
     return true;
 }
 
-YAML::Node YAML::convert<Probability>::encode(const Probability& rhs) {
+YAML::Node YAML::convert<Property>::encode(const Property& rhs) {
     YAML::Node node;
     
-    node.push_back(rhs.probability_);
+    node.push_back(rhs.property);
     node.push_back(rhs.value_);
 
     return node;
 }
 
-bool YAML::convert<Probability>::decode(const YAML::Node& node, Probability& rhs) {
-    if (!node.IsDefined() || !node["probability"] || !node["value"]) {
+bool YAML::convert<Property>::decode(const YAML::Node& node, Property& rhs) {
+    if (!node.IsDefined() || !node["property"] || !node["value"]) {
         return false;
     }
 
-    rhs.probability_ = node["probability"].as<std::string>();
-    rhs.value_ = node["value"].as<double>();
+    rhs.property = node["property"].as<std::string>();
+    try {
+        rhs.value_ = node["value"].as<double>();
+    }
+    catch(const std::exception& e) {
+        rhs.value_str_ = node["value"].as<std::string>();
+    }   
 
     return true;
 }
@@ -227,7 +232,7 @@ const std::string Configuration::overwrite_identifier_{"; // Overwritten through
 
 YamlConfigParseResult YamlConfigParser::parseConfiguration() {
         std::vector<Configuration> configuration;
-        std::vector<Probability> probabilities;
+        std::vector<Property> properties;
 
         try {
             YAML::Node config = YAML::LoadFile(file_);  
@@ -250,8 +255,8 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
                 constants = config["constants"].as<std::vector<Constant>>();
             }
 
-            if (config["probabilities"]) {
-                probabilities = config["probabilities"].as<std::vector<Probability>>();
+            if (config["properties"]) {
+                properties = config["properties"].as<std::vector<Property>>();
             }
         
             for (auto& label : labels) {
@@ -262,16 +267,16 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
             }
             for (auto& module : modules) {
                 if (module.overwrite_module) {
-                    Configuration config = Configuration(module.module_text_, module.module_, ConfigType::Module, true, module.module_, {0}, "endmodule");
+                    Configuration config = Configuration("module " + module.module_text_, "module " + module.module_, ConfigType::Module, true, module.module_, {0}, "endmodule");
                     configuration.push_back(config);
                     continue;
                 }
                 for (auto& command : module.commands_) {
                     Configuration config;
                     if (!command.guard_.empty() && !command.action_.empty() && command.update_.empty()) {
-                        config = Configuration(" " + command.guard_, command.action_, ConfigType::Module, true, module.module_, command.indexes_, "->", false);
+                        config = Configuration(" " + command.guard_, command.action_, ConfigType::GuardOnly, true, module.module_, command.indexes_, "->");
                     } else if (!command.update_.empty() && !command.action_.empty() && command.guard_.empty()) {
-                        config = Configuration( " " + command.update_, command.action_, ConfigType::Module, true, module.module_,  command.indexes_, ";", false);
+                        config = Configuration( " " + command.update_, command.action_, ConfigType::UpdateOnly, true, module.module_,  command.indexes_, ";");
                     } else {
                         config = Configuration(command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.indexes_); 
                     }
@@ -290,5 +295,5 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
             std::cout << "while parsing configuration " << file_ << std::endl;
         }
 
-        return YamlConfigParseResult(configuration, probabilities);
+        return YamlConfigParseResult(configuration, properties);
 }

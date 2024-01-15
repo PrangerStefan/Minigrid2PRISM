@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
+Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability, prism::ModelType mType)
   : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
@@ -62,7 +62,9 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
     }
   }
 
-  if(adversaries.empty()) {
+  if(mType != prism::ModelType::MDP) {
+    modelType = mType;
+  } else if (adversaries.empty()) {
     modelType = prism::ModelType::MDP;
   } else {
     modelType = prism::ModelType::SMG;
@@ -111,14 +113,25 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
           search = "label " + config.identifier_;
         } else if (config.type_ == ConfigType::Module) {
           search = config.identifier_;
+        } else if (config.type_ == ConfigType::UpdateOnly) {
+          search = config.identifier_;
         }
         else if (config.type_ == ConfigType::Constant) {
           search = config.identifier_;
         }
 
         auto iter = boost::find_nth(str, search, index);
+        auto end_identifier = config.end_identifier_;
+
         start_pos = std::distance(str.begin(), iter.begin());
-        size_t end_pos = str.find(';', start_pos) + 1;
+        size_t end_pos = str.find(end_identifier, start_pos);
+
+
+        if (config.type_ == ConfigType::GuardOnly) {
+          start_pos += search.length(); 
+        } else if (config.type_ == ConfigType::UpdateOnly) {
+          start_pos = str.find("->", start_pos) + 2;
+        }
 
         if (end_pos != std::string::npos && end_pos != 0) {
           std::string expression = config.expression_;
