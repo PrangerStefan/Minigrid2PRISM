@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
     }
     if(ok) {
       Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
-
+      
       //grid.printToPrism(std::cout, configurations);
       std::stringstream ss;
       grid.printToPrism(ss, configurations);
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
     std::cout << "got: \"" << std::string(e.first, e.last) << '"' << std::endl;
     std::cout << "Expectation failure: " << e.what() << " at '" << std::string(e.first,e.last) << "'\n";
   } catch(const std::exception& e) {
-    std::cerr << "Exception '" << typeid(e).name() << "' caught:" << std::endl;
+    std::cerr << "Exception '" << typeid(e).name() << "' caught:" << e.what() << std::endl;
     std::cerr << "\t" << e.what() << std::endl;
     std::exit(EXIT_FAILURE);
   }

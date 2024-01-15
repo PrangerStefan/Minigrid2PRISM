@@ -47,10 +47,10 @@ std::string Formula::createExpression() const {
 
 std::string Command::createExpression() const {
     if (overwrite_) {
-        return action_  + "\t" + guard_ + "-> " + update_  + Configuration::overwrite_identifier_;
+        return action_  + "\t" + guard_ + " -> " + update_  + Configuration::overwrite_identifier_;
     }
     
-    return "\t" + action_  + "\t" + guard_ + "-> " + update_+ Configuration::configuration_identifier_;
+    return "\t" + action_  + "\t" + guard_ + " -> " + update_+ Configuration::configuration_identifier_;
 }
 
 std::string Constant::createExpression() const {
@@ -76,6 +76,13 @@ bool YAML::convert<Module>::decode(const YAML::Node& node, Module& rhs) {
     }
     rhs.commands_ = node["commands"].as<std::vector<Command>>();
     rhs.module_ = node["module"].as<std::string>();
+
+    if (node["module_text"]) {
+        rhs.module_text_ = node["module_text"].as<std::string>();
+    }
+    if (node["overwrite"]) {
+        rhs.overwrite_module = node["overwrite"].as<bool>();
+    }
     return true;
 }
 
@@ -96,8 +103,13 @@ bool YAML::convert<Command>::decode(const YAML::Node& node, Command& rhs) {
     }
 
     rhs.action_ = node["action"].as<std::string>();
-    rhs.guard_ = node["guard"].as<std::string>();
-    rhs.update_ = node["update"].as<std::string>();
+    if (node["guard"]) {
+        rhs.guard_ = node["guard"].as<std::string>();
+    }
+
+    if (node["update"]) {
+        rhs.update_ = node["update"].as<std::string>();
+    }
 
     if (node["overwrite"]) {
         rhs.overwrite_ = node["overwrite"].as<bool>();
@@ -249,8 +261,22 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
                 configuration.push_back({formula.createExpression(), formula.formula_ ,ConfigType::Formula, formula.overwrite_});
             }
             for (auto& module : modules) {
+                if (module.overwrite_module) {
+                    Configuration config = Configuration(module.module_text_, module.module_, ConfigType::Module, true, module.module_, {0}, "endmodule");
+                    configuration.push_back(config);
+                    continue;
+                }
                 for (auto& command : module.commands_) {
-                    configuration.push_back({command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.indexes_});
+                    Configuration config;
+                    if (!command.guard_.empty() && !command.action_.empty() && command.update_.empty()) {
+                        config = Configuration(" " + command.guard_, command.action_, ConfigType::Module, true, module.module_, command.indexes_, "->", false);
+                    } else if (!command.update_.empty() && !command.action_.empty() && command.guard_.empty()) {
+                        config = Configuration( " " + command.update_, command.action_, ConfigType::Module, true, module.module_,  command.indexes_, ";", false);
+                    } else {
+                        config = Configuration(command.createExpression(), command.action_, ConfigType::Module, command.overwrite_, module.module_, command.indexes_); 
+                    }
+
+                    configuration.push_back(config);
                 }
             }
             for (auto& constant : constants) {

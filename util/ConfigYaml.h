@@ -22,10 +22,12 @@ struct Configuration
   std::string module_ {};
   std::string expression_{};
   std::string identifier_{};
+  std::string end_identifier_{};  
   std::vector<int> indexes_{0};
 
   ConfigType type_ {ConfigType::Label};
   bool overwrite_ {false};
+  bool include_identifier_for_overwrite_{true};
 
   Configuration() = default;
   Configuration(std::string expression
@@ -33,7 +35,9 @@ struct Configuration
                 , ConfigType type
                 , bool overwrite = false
                 , std::string module = ""
-                , std::vector<int> indexes = {0}) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, indexes_(indexes) {}
+                , std::vector<int> indexes = {0}
+                , std::string end_identifier = {";"}
+                , bool include_identifier_for_overwrite = true) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, indexes_(indexes), end_identifier_{end_identifier}, include_identifier_for_overwrite_{include_identifier_for_overwrite}  {}
   
   ~Configuration() = default;
   Configuration(const Configuration&) = default;
@@ -113,6 +117,8 @@ struct Module {
 
   std::vector<Command> commands_;
   std::string module_;
+  std::string module_text_;
+  bool overwrite_module{false};
 
   friend std::ostream& operator << (std::ostream& os, const Module& module);
 };
