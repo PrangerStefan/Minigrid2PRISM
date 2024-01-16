@@ -24,8 +24,9 @@ properties:
 modules:
   - module: "Agent"
     # overwrite: True
-    # module_text: "NewModule\n\
-    #                                 "
+    # module_text: | 
+    #   NewModule 
+    #   True 
     commands:
       - action: "[Agent_turn_left]"
         guard: "viewAgent=3"
