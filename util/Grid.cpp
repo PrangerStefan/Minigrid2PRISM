@@ -115,6 +115,8 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
           search = config.identifier_;
         } else if (config.type_ == ConfigType::UpdateOnly) {
           search = config.identifier_;
+        } else if (config.type_ == ConfigType::GuardOnly) {
+          search = config.identifier_;
         }
         else if (config.type_ == ConfigType::Constant) {
           search = config.identifier_;
@@ -128,7 +130,7 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
 
 
         if (config.type_ == ConfigType::GuardOnly) {
-          start_pos += search.length(); 
+          start_pos += search.length();
         } else if (config.type_ == ConfigType::UpdateOnly) {
           start_pos = str.find("->", start_pos) + 2;
         }
