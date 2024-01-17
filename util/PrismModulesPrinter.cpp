@@ -325,8 +325,8 @@ namespace prism {
     actionStream << printSlipperyMovementGuard(a, "North", 0, {"!"+a+"CannotSlipEast",     a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "North", { {1, eastUpdate(a) } }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "North", 0, {    a+"CannotSlipEast",     a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "North", {}) << ";\n";
 
-    actionStream << printSlipperyMovementGuard(a, "North", 1, {"!"+a+"CannotSlipNorth"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, "true" }, {1 - probIntended, northUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "North", 1, {    a+"CannotSlipNorth"}) << printSlipperyMovementUpdate(a, "North", { {1, "true"} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "North", 1, {"!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, southUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "North", 1, {    a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "North", { {1, "true"} }) << ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForEast(const AgentName &a) {
@@ -373,7 +373,7 @@ namespace prism {
     actionStream << printSlipperyMovementGuard(a, "South", 0, {"!"+a+"CannotSlipEast",     a+"CannotSlipSouthEast"}) << printSlipperyMovementUpdate(a, "South", { {1, eastUpdate(a) } }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "South", 0, {    a+"CannotSlipEast",     a+"CannotSlipSouthEast"}) << printSlipperyMovementUpdate(a, "South", {}) << ";\n";
 
-    actionStream << printSlipperyMovementGuard(a, "South", 3, {"!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, southUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "South", 3, {"!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, northUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "South", 3, {    a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "South", { {1, "true"} }) << ";\n";
   }
 
