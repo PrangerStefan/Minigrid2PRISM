@@ -278,6 +278,7 @@ namespace prism {
     agentNameActionMap.at(a).insert({actionId, actionName});
     std::string guard = "  " + actionName;
     if(slipperyBehaviour()) guard += " !" + a + "IsOnSlippery & ";
+    if(anyLava)             guard += " !" + a + "IsOnLava &";
     guard += cond + " -> ";
     return guard;
   }
