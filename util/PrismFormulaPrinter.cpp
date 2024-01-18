@@ -194,15 +194,15 @@ namespace prism {
     }
     for(auto const ball : balls) {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      os << " & (col"+identifier+"="+std::to_string(ball.column)+"&row"+identifier+"="+std::to_string(ball.row)+") ";
+      os << " & (col"+identifier+"="+std::to_string(ball.column)+"&row"+identifier+"="+std::to_string(ball.row)+"&"+identifier+"PickedUp=false) ";
     }
     for(auto const key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+") ";
+      os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+"&"+identifier+"PickedUp=false) ";
     }
     for(auto const box : boxes) {
       std::string identifier = capitalize(box.getColor()) + box.getType();
-      os << " & (col"+identifier+"="+std::to_string(box.column)+"&row"+identifier+"="+std::to_string(box.row)+") ";
+      os << " & (col"+identifier+"="+std::to_string(box.column)+"&row"+identifier+"="+std::to_string(box.row)+"&"+identifier+"PickedUp=false) ";
     }
     os << "endinit\n\n";
   }
