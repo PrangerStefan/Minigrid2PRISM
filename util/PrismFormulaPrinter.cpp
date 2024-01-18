@@ -62,6 +62,7 @@ namespace prism {
   { }
 
   void PrismFormulaPrinter::print(const AgentName &agentName) {
+    conditionalMovementRestrictions.clear();
     for(const auto& [direction, cells] : restrictions) {
       printRestrictionFormula(agentName, direction, cells);
     }
