@@ -203,8 +203,11 @@ namespace prism {
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
+
     os << "\n" << actionStream.str();
     actionStream.str(std::string());
+
+    if(agentNameAndPositionMap.size() > 1 && agentName == "Agent") printDoneActions(agentName);
     os << "endmodule\n\n";
   }
 
@@ -490,7 +493,7 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printDoneActions(const AgentName &agentName) {
-    os << "  [" << agentName << "_done]" << moveGuard(agentName) << agentName << "IsInGoal | " << agentName << "IsInLava -> (" << agentName << "Done'=true);\n";
+    os << "  [" << agentName << "_done]" << agentName << "IsOnGoal & clock=0 -> true;\n";
   }
 
   void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName) {
@@ -501,6 +504,7 @@ namespace prism {
       else os << ", ";
       os << actionName;
     }
+    if(agentName == "Agent") os << ", [Agent_done]";
     os << "\nendplayer\n";
   }
 
