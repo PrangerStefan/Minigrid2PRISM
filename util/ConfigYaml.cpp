@@ -74,8 +74,13 @@ bool YAML::convert<Module>::decode(const YAML::Node& node, Module& rhs) {
     if (!node.Type() == NodeType::Map) {
       return false;
     }
-    rhs.commands_ = node["commands"].as<std::vector<Command>>();
+
+
     rhs.module_ = node["module"].as<std::string>();
+    
+    if (node["commands"]) {
+        rhs.commands_ = node["commands"].as<std::vector<Command>>();
+    }
 
     if (node["module_text"]) {
         rhs.module_text_ = node["module_text"].as<std::string>();
@@ -267,7 +272,7 @@ YamlConfigParseResult YamlConfigParser::parseConfiguration() {
             }
             for (auto& module : modules) {
                 if (module.overwrite_module) {
-                    Configuration config = Configuration("module " + module.module_text_, "module " + module.module_, ConfigType::Module, true, module.module_, {0}, "endmodule");
+                    Configuration config = Configuration(module.module_text_, "module " + module.module_ + "\n", ConfigType::Module, true, module.module_, {0}, "endmodule");
                     configuration.push_back(config);
                     continue;
                 }

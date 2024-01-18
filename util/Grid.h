@@ -13,7 +13,7 @@
 
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0, prism::ModelType mType = prism::ModelType::MDP);
+    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
 
     cells getGridCells();
 
@@ -21,6 +21,8 @@ class Grid {
     bool isWall(coordinates p);
     void printToPrism(std::ostream &os, std::vector<Configuration>& configuration);
     void applyOverwrites(std::string& str, std::vector<Configuration>& configuration);
+
+    void setModelType(prism::ModelType type);
 
     std::array<bool, 8> getWalkableDirOf8Neighborhood(cell c);
 

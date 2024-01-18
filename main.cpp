@@ -163,6 +163,8 @@ int main(int argc, char* argv[]) {
       setProbability(properties, parsed_properties, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
+      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
+
       auto modelTypeIter = std::find_if(parsed_properties.begin(), parsed_properties.end(), [](const Property&  obj) -> bool {return obj.property == "modeltype";});
       prism::ModelType modelType = prism::ModelType::MDP;;
       if (modelTypeIter != parsed_properties.end()) {
@@ -171,9 +173,9 @@ int main(int argc, char* argv[]) {
         } else {
           modelType = prism::ModelType::MDP;
         }
+
+        grid.setModelType(modelType);
       }
-      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability, modelType);
-      
   
 
 

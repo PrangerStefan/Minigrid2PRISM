@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability, prism::ModelType mType)
+Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
   : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
@@ -61,10 +61,8 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
       backgroundTiles.emplace(color, cellsOfColor);
     }
   }
-
-  if(mType != prism::ModelType::MDP) {
-    modelType = mType;
-  } else if (adversaries.empty()) {
+  
+  if (adversaries.empty()) {
     modelType = prism::ModelType::MDP;
   } else {
     modelType = prism::ModelType::SMG;
@@ -128,8 +126,7 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
         start_pos = std::distance(str.begin(), iter.begin());
         size_t end_pos = str.find(end_identifier, start_pos);
 
-
-        if (config.type_ == ConfigType::GuardOnly) {
+        if (config.type_ == ConfigType::GuardOnly || config.type_ == ConfigType::Module) {
           start_pos += search.length();
         } else if (config.type_ == ConfigType::UpdateOnly) {
           start_pos = str.find("->", start_pos) + 2;
@@ -191,4 +188,9 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   //if (!configuration.empty()) {
   //  modules.printConfiguration(os, configuration);
   //}
+}
+
+void Grid::setModelType(prism::ModelType type)
+{
+  modelType = type;
 }
