@@ -57,8 +57,8 @@ std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells() {
 }
 
 namespace prism {
-  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals)
-    : os(os),  restrictions(restrictions), walls(walls), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals)
+  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty)
+    : os(os),  restrictions(restrictions), walls(walls), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals), agentNameAndPositionMap(agentNameAndPositionMap), faulty(faulty)
   { }
 
   void PrismFormulaPrinter::print(const AgentName &agentName) {
@@ -158,6 +158,54 @@ namespace prism {
     }
     if(!semicolon) os << ";\n";
   }
+
+  void PrismFormulaPrinter::printCollisionFormula(const AgentName &agentName) {
+    if(!agentNameAndPositionMap.empty()) {
+      os << "formula collision = ";
+      bool first = true;
+      for(auto const [name, coordinates] : agentNameAndPositionMap) {
+        if(name == agentName) continue;
+        if(first) first = false;
+        else os << " | ";
+        os << "(col"+agentName+"=col"+name+"&row"+agentName+"=row"+name+")";
+      }
+      os << ";\n";
+      printCollisionLabel();
+    }
+  }
+
+  void PrismFormulaPrinter::printCollisionLabel() {
+    if(!agentNameAndPositionMap.empty()) {
+      os << "label \"collision\" = collision;\n";
+    }
+  }
+
+  void PrismFormulaPrinter::printInitStruct() {
+    os << "init\n";
+    bool first = true;
+    for(auto const [a, coordinates] : agentNameAndPositionMap) {
+      if(first) first = false;
+      else os << " & ";
+      os << "(col"+a+"="+std::to_string(coordinates.first)+"&row"+a+"="+std::to_string(coordinates.second)+" & ";
+      os << "(view"+a+"=0|view"+a+"=1|view"+a+"=2|view"+a+"=3) ";
+      if(faulty) os << " & previousAction"+a+"="+std::to_string(NOFAULT);
+      os << ")";
+    }
+    for(auto const ball : balls) {
+      std::string identifier = capitalize(ball.getColor()) + ball.getType();
+      os << " & (col"+identifier+"="+std::to_string(ball.column)+"&row"+identifier+"="+std::to_string(ball.row)+") ";
+    }
+    for(auto const key : keys) {
+      std::string identifier = capitalize(key.getColor()) + key.getType();
+      os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+") ";
+    }
+    for(auto const box : boxes) {
+      std::string identifier = capitalize(box.getColor()) + box.getType();
+      os << " & (col"+identifier+"="+std::to_string(box.column)+"&row"+identifier+"="+std::to_string(box.row)+") ";
+    }
+    os << "endinit\n\n";
+  }
+
 
   std::string PrismFormulaPrinter::buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon) {
     return "formula " + formulaName + " = " + formula + (semicolon ? ";\n": "");

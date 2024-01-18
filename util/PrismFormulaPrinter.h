@@ -21,7 +21,7 @@ std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells();
 namespace prism {
   class PrismFormulaPrinter {
     public:
-      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals);
+      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty);
 
       void print(const AgentName &agentName);
 
@@ -31,6 +31,11 @@ namespace prism {
       void printRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition);
       void printRelativeRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition);
       void printSlipRestrictionFormula(const AgentName &agentName, const std::string &direction);
+
+      void printCollisionFormula(const std::string &agentName);
+      void printCollisionLabel();
+
+      void printInitStruct();
     private:
       std::string buildFormula(const std::string &formulaName, const std::string &formula, const bool semicolon = true);
       std::string buildLabel(const std::string &labelName, const std::string &label);
@@ -55,7 +60,11 @@ namespace prism {
       cells lava;
       cells goals;
 
+      AgentNameAndPositionMap agentNameAndPositionMap;
+
       std::vector<std::string> conditionalMovementRestrictions;
       std::vector<std::string> portableObjects;
+
+      bool faulty;
   };
 }

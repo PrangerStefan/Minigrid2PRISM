@@ -154,22 +154,16 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
                  [](const std::map<AgentNameAndPosition::first_type,AgentNameAndPosition::second_type>::value_type &pair){return pair.first;});
   std::string agentName = agentNames.at(0);
 
-  prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals);
+  prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals, agentNameAndPositionMap, faultyProbability > 0.0);
   prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, faultyProbability, !lava.empty(), !goals.empty());
 
   modules.printModelType(modelType);
   for(const auto &agentName : agentNames) {
     formulas.print(agentName);
   }
-  //std::vector<std::string> constants {"const double prop_zero = 0/9;",
-  //                                    "const double prop_intended = 6/9;",
-  //                                    "const double prop_turn_intended = 6/9;",
-  //                                    "const double prop_displacement = 3/9;",
-  //                                    "const double prop_turn_displacement = 3/9;",
-  //                                    "const int width = " + std::to_string(maxBoundaries.first) + ";",
-  //                                    "const int height = " + std::to_string(maxBoundaries.second) + ";"
-  //                                    };
-  //modules.printConstants(os, constants);
+  formulas.printCollisionFormula(agentName);
+  formulas.printInitStruct();
+
   modules.print();
 
 

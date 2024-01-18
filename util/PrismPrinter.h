@@ -5,6 +5,12 @@
 
 #include "cell.h"
 
+#define NOFAULT 3
+#define LEFT 0
+#define RIGHT 1
+#define FORWARD 2
+
+
 typedef std::string AgentName;
 typedef size_t ViewDirection;
 typedef std::pair<std::string, coordinates> AgentNameAndPosition;

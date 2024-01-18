@@ -3,11 +3,6 @@
 #include <map>
 #include <string>
 
-#define NOFAULT 3
-#define LEFT 0
-#define RIGHT 1
-#define FORWARD 2
-
 
 std::string northUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"-1)"; }
 std::string southUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"+1)"; }
@@ -104,8 +99,8 @@ namespace prism {
   void PrismModulesPrinter::printPortableObjectModule(const cell &object) {
     std::string identifier = capitalize(object.getColor()) + object.getType();
     os << "\nmodule " << identifier << std::endl;
-    os << "  col" << identifier << " : [-1.." << maxBoundaries.first  << "] init " << object.column << ";\n";
-    os << "  row" << identifier << " : [-1.." << maxBoundaries.second << "] init " << object.row << ";\n";
+    os << "  col" << identifier << " : [-1.." << maxBoundaries.first  << "];\n";
+    os << "  row" << identifier << " : [-1.." << maxBoundaries.second << "];\n";
     os << "  " << identifier << "PickedUp : bool;\n";
     os << "\n";
 
@@ -136,7 +131,7 @@ namespace prism {
   void PrismModulesPrinter::printDoorModule(const cell &door, const bool &opened) {
     std::string identifier = capitalize(door.getColor()) + door.getType();
     os << "\nmodule " << identifier << std::endl;
-    os << "  " << identifier << "Open : bool init false;\n";
+    os << "  " << identifier << "Open : bool;\n";
     os << "\n";
 
     if(opened) {
@@ -171,9 +166,9 @@ namespace prism {
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
     os << "\nmodule " << agentName << std::endl;
-    os << "  col"    << agentName << " : [1.." << maxBoundaries.first  << "] init " << initialPosition.first << ";\n";
-    os << "  row"    << agentName << " : [1.." << maxBoundaries.second << "] init " << initialPosition.second << ";\n";
-    os << "  view" << agentName << " : [0..3] init 1;\n";
+    os << "  col"    << agentName << " : [1.." << maxBoundaries.first  << "];\n";
+    os << "  row"    << agentName << " : [1.." << maxBoundaries.second << "];\n";
+    os << "  view" << agentName << " : [0..3];\n";
 
     printTurnActionsForRobot(agentName);
     printMovementActionsForRobot(agentName);
@@ -192,19 +187,19 @@ namespace prism {
 
     for(const auto &key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
     for(const auto &ball : balls) {
       std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
     for(const auto &box : boxes) {
       std::string identifier = capitalize(box.getColor()) + box.getType();
-      os << "  " << agentName << "Carrying" << identifier << " : bool init false;\n";
+      os << "  " << agentName << "Carrying" << identifier << " : bool;\n";
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
@@ -464,7 +459,7 @@ namespace prism {
 
   void PrismModulesPrinter::printFaultyMovementModule(const AgentName &a) {
     os << "\nmodule " << a << "FaultyBehaviour" << std::endl;
-    os << "  previousAction" << a << " : [0.." + std::to_string(NOFAULT) + "] init " + std::to_string(NOFAULT) + ";\n";
+    os << "  previousAction" << a << " : [0.." + std::to_string(NOFAULT) + "];\n";
 
     for(const auto [actionId, actionName] : agentNameActionMap.at(a)) {
       os << "  " << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
@@ -474,7 +469,7 @@ namespace prism {
 
   void PrismModulesPrinter::printMoveModule() {
     os << "\nmodule " << "Arbiter" << std::endl;
-    os << "  clock : [0.." << agentIndexMap.size() - 1 << "] init 0;\n";
+    os << "  clock : [0.." << agentIndexMap.size() - 1 << "];\n";
 
     for(const auto [agentName, actions] : agentNameActionMap) {
       for(const auto [actionId, actionName] : actions) {
