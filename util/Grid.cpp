@@ -161,7 +161,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   for(const auto &agentName : agentNames) {
     formulas.print(agentName);
   }
-  formulas.printCollisionFormula(agentName);
+  if(agentNameAndPositionMap.size() > 1) formulas.printCollisionFormula(agentName);
   formulas.printInitStruct();
 
   modules.print();
