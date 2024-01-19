@@ -9,6 +9,10 @@
 #define LEFT 0
 #define RIGHT 1
 #define FORWARD 2
+#define PICKUP 3
+#define DROP 4
+#define TOGGLE 5
+#define DONE 6
 
 
 typedef std::string AgentName;
