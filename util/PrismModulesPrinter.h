@@ -38,6 +38,7 @@ namespace prism {
       void printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key);
       void printMovementActionsForRobot(const std::string &a);
       void printTurnActionsForRobot(const std::string &a);
+      void printNonMovementActionsForRobot(const AgentName &agentName);
       void printSlipperyMovementActionsForRobot(const AgentName &a);
       void printSlipperyMovementActionsForNorth(const AgentName &a);
       void printSlipperyMovementActionsForEast(const AgentName &a);

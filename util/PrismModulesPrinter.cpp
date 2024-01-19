@@ -203,6 +203,8 @@ namespace prism {
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
+    printNonMovementActionsForRobot(agentName);
+
 
     os << "\n" << actionStream.str();
     actionStream.str(std::string());
@@ -283,6 +285,14 @@ namespace prism {
 
   std::string PrismModulesPrinter::printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const {
     return updateToString(u) + ";\n";
+  }
+
+  void PrismModulesPrinter::printNonMovementActionsForRobot(const AgentName &agentName) {
+    for(auto const [actionId, action] : nonMovementActions) {
+      std::string actionName = "[" + agentName + "_" + action + "]";
+      agentNameActionMap.at(agentName).insert({actionId, actionName});
+      actionStream << "  " << actionName << " true -> true;\n";
+    }
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForRobot(const AgentName &a) {
@@ -464,7 +474,9 @@ namespace prism {
     os << "\nmodule " << a << "FaultyBehaviour" << std::endl;
     os << "  previousAction" << a << " : [0.." + std::to_string(NOFAULT) + "];\n";
 
+    std::set<size_t> exclude = {PICKUP, DROP, TOGGLE, DONE};
     for(const auto [actionId, actionName] : agentNameActionMap.at(a)) {
+      if(exclude.count(actionId) > 0) continue;
       os << "  " << actionName << faultyBehaviourGuard(a, actionId) << " -> " << faultyBehaviourUpdate(a, actionId) << ";\n";
     }
     os << "endmodule\n\n";
@@ -493,7 +505,7 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printDoneActions(const AgentName &agentName) {
-    os << "  [" << agentName << "_done]" << agentName << "IsOnGoal & clock=0 -> true;\n";
+    os << "  [" << agentName << "_on_goal]" << agentName << "IsOnGoal & clock=0 -> true;\n";
   }
 
   void PrismModulesPrinter::printPlayerStruct(const AgentName &agentName) {
@@ -504,7 +516,7 @@ namespace prism {
       else os << ", ";
       os << actionName;
     }
-    if(agentName == "Agent") os << ", [Agent_done]";
+    if(agentName == "Agent") os << ", [Agent_on_goal]";
     os << "\nendplayer\n";
   }
 
