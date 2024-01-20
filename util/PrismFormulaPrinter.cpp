@@ -57,8 +57,8 @@ std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells() {
 }
 
 namespace prism {
-  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty)
-    : os(os),  restrictions(restrictions), walls(walls), boxes(boxes), balls(balls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals), agentNameAndPositionMap(agentNameAndPositionMap), faulty(faulty)
+  PrismFormulaPrinter::PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty)
+    : os(os),  restrictions(restrictions), walls(walls), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), lava(lava), goals(goals), agentNameAndPositionMap(agentNameAndPositionMap), faulty(faulty)
   { }
 
   void PrismFormulaPrinter::print(const AgentName &agentName) {
@@ -83,21 +83,10 @@ namespace prism {
     if(!lava.empty())  printIsOnFormula(agentName, "Lava", lava);
     if(!goals.empty()) printIsOnFormula(agentName, "Goal", goals);
 
-    for(const auto& ball : balls) {
-      std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
-      portableObjects.push_back(agentName + "Carrying" + identifier);
-    }
-
-    for(const auto& box : boxes) {
-      std::string identifier = capitalize(box.getColor()) + box.getType();
-      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
-      portableObjects.push_back(agentName + "Carrying" + identifier);
-    }
 
     for(const auto& key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
-      printRelativeRestrictionFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
+      printRelativeIsInFrontOfFormulaWithCondition(agentName, identifier, "!" + identifier + "PickedUp");
       portableObjects.push_back(agentName + "Carrying" + identifier);
     }
 
@@ -136,27 +125,14 @@ namespace prism {
     conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
   }
 
-  void PrismFormulaPrinter::printRelativeRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition) {
-    os << buildFormula(agentName + "CannotMove" + reason, "(" + buildDisjunction(agentName, reason) + ") & " + condition);
-    conditionalMovementRestrictions.push_back(agentName + "CannotMove" + reason);
+  void PrismFormulaPrinter::printRelativeIsInFrontOfFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition) {
+    os << buildFormula(agentName + "IsInFrontOf" + reason, "(" + buildDisjunction(agentName, reason) + ") & " + condition);
   }
 
   void PrismFormulaPrinter::printSlipRestrictionFormula(const AgentName &agentName, const std::string &direction) {
     std::pair<int, int> slipCell = getRelativeSurroundingCells().at(direction);
     bool semicolon = anyPortableObject() ? false : true;
     os << buildFormula(agentName + "CannotSlip" + direction, buildDisjunction(agentName, walls, slipCell), semicolon);
-    for(auto const key : keys) {
-      std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
-    }
-    for(auto const ball : balls) {
-      std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
-    }
-    for(auto const box : boxes) {
-      std::string identifier = capitalize(box.getColor()) + box.getType();
-      os << " | " << objectPositionToConjunction(agentName, identifier, slipCell);
-    }
     if(!semicolon) os << ";\n";
   }
 
@@ -192,17 +168,9 @@ namespace prism {
       if(faulty) os << " & previousAction"+a+"="+std::to_string(NOFAULT);
       os << ")";
     }
-    for(auto const ball : balls) {
-      std::string identifier = capitalize(ball.getColor()) + ball.getType();
-      os << " & (col"+identifier+"="+std::to_string(ball.column)+"&row"+identifier+"="+std::to_string(ball.row)+"&"+identifier+"PickedUp=false) ";
-    }
     for(auto const key : keys) {
       std::string identifier = capitalize(key.getColor()) + key.getType();
       os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+"&"+identifier+"PickedUp=false) ";
-    }
-    for(auto const box : boxes) {
-      std::string identifier = capitalize(box.getColor()) + box.getType();
-      os << " & (col"+identifier+"="+std::to_string(box.column)+"&row"+identifier+"="+std::to_string(box.row)+"&"+identifier+"PickedUp=false) ";
     }
     os << "endinit\n\n";
   }
@@ -264,6 +232,6 @@ namespace prism {
     return !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
   }
   bool PrismFormulaPrinter::anyPortableObject() const {
-    return !keys.empty() || !boxes.empty() || !balls.empty();
+    return !keys.empty();
   }
 }

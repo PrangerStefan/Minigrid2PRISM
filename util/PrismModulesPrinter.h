@@ -16,7 +16,7 @@ std::string westUpdate(const AgentName &a);
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
+      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
 
       std::ostream& print();
 
@@ -26,14 +26,14 @@ namespace prism {
       bool isGame() const;
     private:
       void printPortableObjectModule(const cell &object);
-      void printPortableObjectActions(const std::string &agentName, const std::string &identifier);
+      void printPortableObjectActions(const std::string &agentName, const std::string &identifier, const bool canBeDroped = false);
 
       void printDoorModule(const cell &object, const bool &opened);
       void printLockedDoorActions(const std::string &agentName, const std::string &identifier);
       void printUnlockedDoorActions(const std::string &agentName, const std::string &identifier);
 
       void printRobotModule(const AgentName &agentName, const coordinates &initialPosition);
-      void printPortableObjectActionsForRobot(const std::string &agentName, const std::string &identifier);
+      void printPortableObjectActionsForRobot(const std::string &agentName, const std::string &identifier, const bool canBeDroped = false);
       void printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier);
       void printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key);
       void printMovementActionsForRobot(const std::string &a);
@@ -92,8 +92,6 @@ namespace prism {
       ModelType const &modelType;
       coordinates const &maxBoundaries;
       AgentName agentName;
-      cells boxes;
-      cells balls;
       cells lockedDoors;
       cells unlockedDoors;
       cells keys;

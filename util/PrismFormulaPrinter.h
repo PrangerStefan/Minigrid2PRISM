@@ -21,7 +21,7 @@ std::map<std::string, std::pair<int, int>> getRelativeSurroundingCells();
 namespace prism {
   class PrismFormulaPrinter {
     public:
-      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty);
+      PrismFormulaPrinter(std::ostream &os, const std::map<std::string, cells> &restrictions, const cells &walls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const cells &lava, const cells &goals, const AgentNameAndPositionMap &agentNameAndPositionMap, const bool faulty);
 
       void print(const AgentName &agentName);
 
@@ -29,7 +29,7 @@ namespace prism {
       void printIsOnFormula(const AgentName &agentName, const std::string &type, const cells &grid_cells, const std::string &direction = "");
       void printIsNextToFormula(const AgentName &agentName, const std::string &type, const std::map<ViewDirection, coordinates> &coordinates);
       void printRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::map<ViewDirection, coordinates> &coordinates, const std::string &condition);
-      void printRelativeRestrictionFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition);
+      void printRelativeIsInFrontOfFormulaWithCondition(const AgentName &agentName, const std::string &reason, const std::string &condition);
       void printSlipRestrictionFormula(const AgentName &agentName, const std::string &direction);
 
       void printCollisionFormula(const std::string &agentName);
@@ -51,8 +51,6 @@ namespace prism {
       std::ostream &os;
       std::map<std::string, cells> restrictions;
       cells walls;
-      cells boxes;
-      cells balls;
       cells lockedDoors;
       cells unlockedDoors;
       cells keys;
