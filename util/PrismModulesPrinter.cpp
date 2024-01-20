@@ -193,7 +193,7 @@ namespace prism {
     os << "\n" << actionStream.str();
     actionStream.str(std::string());
 
-    if(agentNameAndPositionMap.size() > 1 && agentName == "Agent") printDoneActions(agentName);
+    if(agentNameAndPositionMap.size() > 1 && agentName == "Agent" && anyGoals) printDoneActions(agentName);
     os << "endmodule\n\n";
   }
 
@@ -502,7 +502,7 @@ namespace prism {
       else os << ", ";
       os << actionName;
     }
-    if(agentName == "Agent") os << ", [Agent_on_goal]";
+    if(agentName == "Agent" && anyGoals) os << ", [Agent_on_goal]";
     os << "\nendplayer\n";
   }
 
