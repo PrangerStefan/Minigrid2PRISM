@@ -143,21 +143,21 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printLockedDoorActions(const std::string &agentName, const std::string &identifier) {
-    std::string actionName = "[" + agentName + "_unlock_" + identifier + "]";
+    std::string actionName = "[" + agentName + "_toggle_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
     os << "  " << actionName << " !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
-    actionName = "[" + agentName + "_close_" + identifier + "]";
+    actionName = "[" + agentName + "_toggle_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
     os << "  " << actionName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printUnlockedDoorActions(const std::string &agentName, const std::string &identifier) {
-    std::string actionName = "[" + agentName + "_open_" + identifier + "]";
+    std::string actionName = "[" + agentName + "_toggle_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "   !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
-    actionName = "[" + agentName + "_close_" + identifier + "]";
+    os << "  " << actionName << " !" << identifier << "Open -> (" << identifier << "Open'=true);\n";
+    actionName = "[" + agentName + "_toggle_" + identifier + "]";
     agentNameActionMap.at(agentName).insert({NOFAULT, actionName});
-    os << "  " << agentName << " " << identifier << "Open -> (" << identifier << "Open'=false);\n";
+    os << "  " << actionName << "  " << identifier << "Open -> (" << identifier << "Open'=false);\n";
   }
 
   void PrismModulesPrinter::printRobotModule(const AgentName &agentName, const coordinates &initialPosition) {
@@ -209,14 +209,14 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier) {
-    actionStream << "  [" << agentName << "_open_" << identifier  << "] " << agentName << "CannotMove" << identifier << " -> true;\n";
-    actionStream << "  [" << agentName << "_close_" << identifier << "] " << agentName << "IsNextTo"     << identifier << " -> true;\n";
+    actionStream << "  [" << agentName << "_toggle_" << identifier  << "] " << agentName << "CannotMove" << identifier << " -> true;\n";
+    actionStream << "  [" << agentName << "_toggle_" << identifier << "] " << agentName << "IsNextTo"     << identifier << " -> true;\n";
     actionStream << "\n";
   }
 
   void PrismModulesPrinter::printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key) {
-    actionStream << "  [" << agentName << "_unlock_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
-    actionStream << "  [" << agentName << "_close_" << identifier << "] "   << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "  [" << agentName << "_toggle_" << identifier  << "] " << agentName << "CannotMove" << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
+    actionStream << "  [" << agentName << "_toggle_" << identifier << "] "   << agentName << "IsNextTo"   << identifier << " & " << agentName << "Carrying" << key << " -> true;\n";
     actionStream << "\n";
   }
 
