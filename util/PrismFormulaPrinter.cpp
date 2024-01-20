@@ -104,6 +104,8 @@ namespace prism {
 
     if(conditionalMovementRestrictions.size() > 0) {
       os << buildFormula(agentName + "CannotMoveConditionally", vectorToDisjunction(conditionalMovementRestrictions));
+    }
+    if(portableObjects.size() > 0) {
       os << buildFormula(agentName + "IsCarrying", vectorToDisjunction(portableObjects));
     }
   }
