@@ -250,7 +250,7 @@ namespace prism {
     if(anyLava)             guard += " & !" + a + "IsOnLava";
     if(anyGoals)            guard += " & !" + a + "IsOnGoal";
     guard += " & !" + a + "CannotMove" + direction + "Wall";
-    if(anyPortableObject()) guard += " & !" + a + "CannotMoveConditionally";
+    if(anyPortableObject() || !lockedDoors.empty() || !unlockedDoors.empty()) guard += " & !" + a + "CannotMoveConditionally";
     guard += " -> ";
     return guard;
   }
