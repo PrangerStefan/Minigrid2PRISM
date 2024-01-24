@@ -160,20 +160,20 @@ namespace prism {
   }
 
   void PrismFormulaPrinter::printInitStruct() {
-    os << "init\n";
-    bool first = true;
-    for(auto const [a, coordinates] : agentNameAndPositionMap) {
-      if(first) first = false;
-      else os << " & ";
-      os << "(col"+a+"="+std::to_string(coordinates.first)+"&row"+a+"="+std::to_string(coordinates.second)+" & ";
-      os << "(view"+a+"=0|view"+a+"=1|view"+a+"=2|view"+a+"=3) ";
-      if(faulty) os << " & previousAction"+a+"="+std::to_string(NOFAULT);
-      os << ")";
-    }
-    for(auto const key : keys) {
-      std::string identifier = capitalize(key.getColor()) + key.getType();
-      os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+"&"+identifier+"PickedUp=false) ";
-    }
+    os << "init\n  true\n";
+    //bool first = true;
+    //for(auto const [a, coordinates] : agentNameAndPositionMap) {
+    //  if(first) first = false;
+    //  else os << " & ";
+    //  os << "(col"+a+"="+std::to_string(coordinates.first)+"&row"+a+"="+std::to_string(coordinates.second)+" & ";
+    //  os << "(view"+a+"=0|view"+a+"=1|view"+a+"=2|view"+a+"=3) ";
+    //  if(faulty) os << " & previousAction"+a+"="+std::to_string(NOFAULT);
+    //  os << ")";
+    //}
+    //for(auto const key : keys) {
+    //  std::string identifier = capitalize(key.getColor()) + key.getType();
+    //  os << " & (col"+identifier+"="+std::to_string(key.column)+"&row"+identifier+"="+std::to_string(key.row)+"&"+identifier+"PickedUp=false) ";
+    //}
     os << "endinit\n\n";
   }
 
