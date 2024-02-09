@@ -46,6 +46,10 @@ class Grid {
     cells slipperyEast;
     cells slipperySouth;
     cells slipperyWest;
+    cells slipperyNorthWest;
+    cells slipperyNorthEast;
+    cells slipperySouthWest;
+    cells slipperySouthEast;
     cells lockedDoors;
     cells unlockedDoors;
     cells boxes;

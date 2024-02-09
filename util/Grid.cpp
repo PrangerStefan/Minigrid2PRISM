@@ -15,6 +15,10 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast),  [](cell c) { return c.type == Type::SlipperyEast; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) { return c.type == Type::SlipperySouth; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyWest),  [](cell c) { return c.type == Type::SlipperyWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorthWest), [](cell c) { return c.type == Type::SlipperyNorthWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorthEast), [](cell c) { return c.type == Type::SlipperyNorthEast; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouthWest), [](cell c) { return c.type == Type::SlipperySouthWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouthEast), [](cell c) { return c.type == Type::SlipperySouthEast; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lockedDoors),   [](cell c) { return c.type == Type::LockedDoor; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(unlockedDoors), [](cell c) { return c.type == Type::Door; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(goals),         [](cell c) { return c.type == Type::Goal; });
@@ -157,7 +161,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
 
 
   std::map<std::string, cells> wallRestrictions = {{"North", northRestriction}, {"East", eastRestriction}, {"South", southRestriction}, {"West", westRestriction}};
-  std::map<std::string, cells> slipperyTiles    = {{"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}};
+  std::map<std::string, cells> slipperyTiles    = {{"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}, {"NorthWest", slipperyNorthWest}, {"NorthEast", slipperyNorthEast},{"SouthWest", slipperySouthWest},{"SouthEast", slipperySouthEast}};
 
   std::vector<AgentName> agentNames;
   std::transform(agentNameAndPositionMap.begin(),

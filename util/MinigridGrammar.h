@@ -66,6 +66,10 @@ template <typename It>
       ("e", Type::SlipperyEast)
       ("s", Type::SlipperySouth)
       ("w", Type::SlipperyWest)
+      ("a", Type::SlipperyNorthWest)
+      ("b", Type::SlipperyNorthEast)
+      ("c", Type::SlipperySouthWest)
+      ("d", Type::SlipperySouthEast)
       ("X", Type::Agent)
       ("Z", Type::Adversary);
     color_.add
@@ -74,8 +78,9 @@ template <typename It>
       ("B", Color::Blue)
       ("P", Color::Purple)
       ("Y", Color::Yellow)
+      ("W", Color::White)
       (" ", Color::None);
-  
+
     cell_ = type_ > color_;
 
     row_ = (cell_ % -qi::char_("\n"));
