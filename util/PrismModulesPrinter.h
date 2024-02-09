@@ -48,6 +48,14 @@ namespace prism {
       void printSlipperyTurnActionsForEast(const AgentName &a);
       void printSlipperyTurnActionsForSouth(const AgentName &a);
       void printSlipperyTurnActionsForWest(const AgentName &a);
+      void printSlipperyMovementActionsForNorthWest(const AgentName &a);
+      void printSlipperyTurnActionsForNorthWest(const AgentName &a);
+      void printSlipperyMovementActionsForNorthEast(const AgentName &a);
+      void printSlipperyTurnActionsForNorthEast(const AgentName &a);
+      void printSlipperyMovementActionsForSouthWest(const AgentName &a);
+      void printSlipperyTurnActionsForSouthWest(const AgentName &a);
+      void printSlipperyMovementActionsForSouthEast(const AgentName &a);
+      void printSlipperyTurnActionsForSouthEast(const AgentName &a);
 
       std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection);
       std::string printMovementUpdate(const AgentName &a, const update &update) const;
@@ -55,7 +63,7 @@ namespace prism {
       std::string printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const;
       std::string printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards);
       std::string printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const;
-      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond);
+      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::string &tiltDirection, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond);
       std::string printSlipperyTurnUpdate(const AgentName &a, const updates &u);
 
       void printFaultyMovementModule(const AgentName &a);

@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 
+
 std::string oneOffToString(const int &offset) {
   return offset != 0 ? ( offset == 1 ? "+1" : "-1" )  : "";
 }
@@ -71,7 +72,10 @@ namespace prism {
       for(const auto& [direction, cells] : slipperyTiles) {
         printIsOnFormula(agentName, "Slippery", cells, direction);
       }
-      std::vector<std::string> allSlipperyDirections = {agentName + "IsOnSlipperyNorth", agentName + "IsOnSlipperyEast", agentName + "IsOnSlipperySouth", agentName + "IsOnSlipperyWest"};
+      std::vector<std::string> allSlipperyDirections;
+      for(const auto &[slipperyType, _] : slipperyTiles) {
+        allSlipperyDirections.push_back(agentName + "IsOnSlippery" + slipperyType);
+      }
       os << buildFormula(agentName + "IsOnSlippery", vectorToDisjunction(allSlipperyDirections));
 
       for(const auto& [direction, relativePosition] : getRelativeSurroundingCells()) {
