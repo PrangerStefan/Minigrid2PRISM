@@ -188,7 +188,7 @@ namespace prism {
       printPortableObjectActionsForRobot(agentName, identifier);
     }
 
-    printNonMovementActionsForRobot(agentName);
+    //printNonMovementActionsForRobot(agentName);
 
 
     os << "\n" << actionStream.str();
