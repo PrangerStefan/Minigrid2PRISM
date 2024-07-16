@@ -247,9 +247,9 @@ namespace prism {
     std::string actionName = "[" + a + "_move_" + direction + "]";
     agentNameActionMap.at(a).insert({FORWARD, actionName});
     std::string guard = "  " + actionName + " " + viewVariable(a, viewDirection);
-    if(slipperyBehaviour()) guard += " & !" + a + "IsOnSlippery";
-    if(anyLava)             guard += " & !" + a + "IsOnLava";
-    if(anyGoals)            guard += " & !" + a + "IsOnGoal";
+    if(slipperyBehaviour())      guard += " & !" + a + "IsOnSlippery";
+    if(anyLava)                  guard += " & !" + a + "IsOnLava";
+    if(anyGoals && a == "Agent") guard += " & !" + a + "IsOnGoal";
     guard += " & !" + a + "CannotMove" + direction + "Wall";
     if(anyPortableObject() || !lockedDoors.empty() || !unlockedDoors.empty()) guard += " & !" + a + "CannotMoveConditionally";
     guard += " -> ";
