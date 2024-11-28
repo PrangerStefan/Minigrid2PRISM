@@ -23,7 +23,11 @@ enum class Type : char {
   SlipperyNorth = 'n',
   SlipperySouth = 's',
   SlipperyEast  = 'e',
-  SlipperyWest  = 'w'
+  SlipperyWest  = 'w',
+  SlipperyNorthWest = 'a',
+  SlipperyNorthEast = 'b',
+  SlipperySouthWest = 'c',
+  SlipperySouthEast = 'd'
 };
 enum class Color : char {
   Red    = 'R',
@@ -31,6 +35,7 @@ enum class Color : char {
   Blue   = 'B',
   Purple = 'P',
   Yellow = 'Y',
+  White  = 'W',
   //Grey   = 'G',
   None   = ' '
 };

@@ -11,6 +11,8 @@ enum class ConfigType : char {
   Label = 'L',
   Formula = 'F',
   Module = 'M',
+  UpdateOnly = 'U',
+  GuardOnly = 'G',
   Constant = 'C'
 };
 
@@ -22,6 +24,7 @@ struct Configuration
   std::string module_ {};
   std::string expression_{};
   std::string identifier_{};
+  std::string end_identifier_{};  
   std::vector<int> indexes_{0};
 
   ConfigType type_ {ConfigType::Label};
@@ -33,7 +36,8 @@ struct Configuration
                 , ConfigType type
                 , bool overwrite = false
                 , std::string module = ""
-                , std::vector<int> indexes = {0}) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, indexes_(indexes) {}
+                , std::vector<int> indexes = {0}
+                , std::string end_identifier = {";"}) : expression_(expression), identifier_(identifier), type_(type), overwrite_(overwrite), module_{module}, indexes_(indexes), end_identifier_{end_identifier}  {}
   
   ~Configuration() = default;
   Configuration(const Configuration&) = default;
@@ -44,15 +48,16 @@ struct Configuration
   }
 };
 
-struct Probability {
-  Probability() = default;
-  Probability(const Probability&) = default;
-  ~Probability() = default;
+struct Property {
+  Property() = default;
+  Property(const Property&) = default;
+  ~Property() = default;
 
-  std::string probability_;
+  std::string property;
   double value_; 
+  std::string value_str_;
 
-  friend std::ostream& operator <<(std::ostream& os, const Probability& property);
+  friend std::ostream& operator <<(std::ostream& os, const Property& property);
 };
 
 struct Constant {
@@ -113,6 +118,8 @@ struct Module {
 
   std::vector<Command> commands_;
   std::string module_;
+  std::string module_text_;
+  bool overwrite_module{false};
 
   friend std::ostream& operator << (std::ostream& os, const Module& module);
 };
@@ -150,20 +157,20 @@ struct YAML::convert<Constant> {
 };
 
 template<>
-struct YAML::convert<Probability> {
-  static YAML::Node encode(const Probability& rhs);
-  static bool decode(const YAML::Node& node, Probability& rhs);
+struct YAML::convert<Property> {
+  static YAML::Node encode(const Property& rhs);
+  static bool decode(const YAML::Node& node, Property& rhs);
 };
 
 struct YamlConfigParseResult {
-  YamlConfigParseResult(std::vector<Configuration> configurations, std::vector<Probability>  probabilities) 
-    : configurations_(configurations), probabilities_(probabilities) {}
+  YamlConfigParseResult(std::vector<Configuration> configurations, std::vector<Property>  probabilities) 
+    : configurations_(configurations), properties_(probabilities) {}
 
   ~YamlConfigParseResult() = default;
   YamlConfigParseResult(const YamlConfigParseResult&) = default;
 
   std::vector<Configuration> configurations_;
-  std::vector<Probability>  probabilities_;
+  std::vector<Property>  properties_;
 };
 
 struct YamlConfigParser {

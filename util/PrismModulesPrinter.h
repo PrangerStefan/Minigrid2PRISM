@@ -16,7 +16,7 @@ std::string westUpdate(const AgentName &a);
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &boxes, const cells &balls, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
+      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
 
       std::ostream& print();
 
@@ -26,18 +26,19 @@ namespace prism {
       bool isGame() const;
     private:
       void printPortableObjectModule(const cell &object);
-      void printPortableObjectActions(const std::string &agentName, const std::string &identifier);
+      void printPortableObjectActions(const std::string &agentName, const std::string &identifier, const bool canBeDroped = false);
 
       void printDoorModule(const cell &object, const bool &opened);
       void printLockedDoorActions(const std::string &agentName, const std::string &identifier);
       void printUnlockedDoorActions(const std::string &agentName, const std::string &identifier);
 
       void printRobotModule(const AgentName &agentName, const coordinates &initialPosition);
-      void printPortableObjectActionsForRobot(const std::string &agentName, const std::string &identifier);
+      void printPortableObjectActionsForRobot(const std::string &agentName, const std::string &identifier, const bool canBeDroped = false);
       void printUnlockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier);
       void printLockedDoorActionsForRobot(const std::string &agentName, const std::string &identifier, const std::string &key);
       void printMovementActionsForRobot(const std::string &a);
       void printTurnActionsForRobot(const std::string &a);
+      void printNonMovementActionsForRobot(const AgentName &agentName);
       void printSlipperyMovementActionsForRobot(const AgentName &a);
       void printSlipperyMovementActionsForNorth(const AgentName &a);
       void printSlipperyMovementActionsForEast(const AgentName &a);
@@ -47,6 +48,14 @@ namespace prism {
       void printSlipperyTurnActionsForEast(const AgentName &a);
       void printSlipperyTurnActionsForSouth(const AgentName &a);
       void printSlipperyTurnActionsForWest(const AgentName &a);
+      void printSlipperyMovementActionsForNorthWest(const AgentName &a);
+      void printSlipperyTurnActionsForNorthWest(const AgentName &a);
+      void printSlipperyMovementActionsForNorthEast(const AgentName &a);
+      void printSlipperyTurnActionsForNorthEast(const AgentName &a);
+      void printSlipperyMovementActionsForSouthWest(const AgentName &a);
+      void printSlipperyTurnActionsForSouthWest(const AgentName &a);
+      void printSlipperyMovementActionsForSouthEast(const AgentName &a);
+      void printSlipperyTurnActionsForSouthEast(const AgentName &a);
 
       std::string printMovementGuard(const AgentName &a, const std::string &direction, const size_t &viewDirection);
       std::string printMovementUpdate(const AgentName &a, const update &update) const;
@@ -54,7 +63,7 @@ namespace prism {
       std::string printTurnUpdate(const AgentName &a, const update &u, const ActionId &actionId) const;
       std::string printSlipperyMovementGuard(const AgentName &a, const std::string &direction, const ViewDirection &viewDirection, const std::vector<std::string> &guards);
       std::string printSlipperyMovementUpdate(const AgentName &a, const std::string &direction, const updates &u) const;
-      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond);
+      std::string printSlipperyTurnGuard(const AgentName &a, const std::string &direction, const std::string &tiltDirection, const ActionId &actionId, const std::vector<std::string> &guards, const std::string &cond);
       std::string printSlipperyTurnUpdate(const AgentName &a, const updates &u);
 
       void printFaultyMovementModule(const AgentName &a);
@@ -91,8 +100,6 @@ namespace prism {
       ModelType const &modelType;
       coordinates const &maxBoundaries;
       AgentName agentName;
-      cells boxes;
-      cells balls;
       cells lockedDoors;
       cells unlockedDoors;
       cells keys;
@@ -109,6 +116,7 @@ namespace prism {
       std::vector<Configuration> configuration;
       std::vector<ViewDirection> viewDirections = {0, 1, 2, 3};
       std::map<ViewDirection, std::string> viewDirectionToString = {{0, "East"}, {1, "South"}, {2, "West"}, {3, "North"}};
+      std::vector<std::pair<size_t, std::string>> nonMovementActions = { {PICKUP, "pickup"}, {DROP, "drop"}, {TOGGLE, "toggle"}, {DONE, "done"} };
 
       std::map<AgentName, std::set<std::pair<ActionId, std::string>>> agentNameActionMap;
   };

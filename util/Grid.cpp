@@ -3,19 +3,11 @@
 
 #include <algorithm>
 
-prism::ModelType GridOptions::getModelType() const
-{
-  if (agentsWithView.size() > 1) {
-    return prism::ModelType::SMG;
-  }
-  return prism::ModelType::MDP;
-}
-
-Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
-  : allGridCells(gridCells), background(background), gridOptions(gridOptions), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
+Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
+  : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
-  maxBoundaries = std::make_pair(max.row - 1, max.column - 1);
+  maxBoundaries = std::make_pair(max.column - 1, max.row - 1);
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(walls),         [](cell c) { return c.type == Type::Wall; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lava),          [](cell c) { return c.type == Type::Lava; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(floor),         [](cell c) { return c.type == Type::Floor; }); // TODO CHECK IF ALL AGENTS ARE ADDED TO FLOOR
@@ -23,6 +15,10 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast),  [](cell c) { return c.type == Type::SlipperyEast; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) { return c.type == Type::SlipperySouth; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyWest),  [](cell c) { return c.type == Type::SlipperyWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorthWest), [](cell c) { return c.type == Type::SlipperyNorthWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorthEast), [](cell c) { return c.type == Type::SlipperyNorthEast; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouthWest), [](cell c) { return c.type == Type::SlipperySouthWest; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouthEast), [](cell c) { return c.type == Type::SlipperySouthEast; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lockedDoors),   [](cell c) { return c.type == Type::LockedDoor; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(unlockedDoors), [](cell c) { return c.type == Type::Door; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(goals),         [](cell c) { return c.type == Type::Goal; });
@@ -38,7 +34,6 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
     std::string color = adversary.getColor();
     color.at(0) = std::toupper(color.at(0));
     try {
-      if(gridOptions.agentsToBeConsidered.size() != 0 && std::find(gridOptions.agentsToBeConsidered.begin(), gridOptions.agentsToBeConsidered.end(), color) == gridOptions.agentsToBeConsidered.end()) continue;
       auto success = agentNameAndPositionMap.insert({ color, adversary.getCoordinates() });
       floor.push_back(adversary);
       if(!success.second) {
@@ -69,6 +64,12 @@ Grid::Grid(cells gridCells, cells background, const GridOptions &gridOptions, co
     if(cellsOfColor.size() > 0) {
       backgroundTiles.emplace(color, cellsOfColor);
     }
+  }
+  
+  if (adversaries.empty()) {
+    modelType = prism::ModelType::MDP;
+  } else {
+    modelType = prism::ModelType::SMG;
   }
 }
 
@@ -106,7 +107,7 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
     }
       for (auto& index : config.indexes_) {
         size_t start_pos;
-        std::string search;      
+        std::string search;
 
         if (config.type_ == ConfigType::Formula) {
           search = "formula " + config.identifier_;
@@ -114,14 +115,26 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
           search = "label " + config.identifier_;
         } else if (config.type_ == ConfigType::Module) {
           search = config.identifier_;
+        } else if (config.type_ == ConfigType::UpdateOnly) {
+          search = config.identifier_;
+        } else if (config.type_ == ConfigType::GuardOnly) {
+          search = config.identifier_;
         }
         else if (config.type_ == ConfigType::Constant) {
           search = config.identifier_;
         }
 
         auto iter = boost::find_nth(str, search, index);
+        auto end_identifier = config.end_identifier_;
+
         start_pos = std::distance(str.begin(), iter.begin());
-        size_t end_pos = str.find(';', start_pos) + 1;
+        size_t end_pos = str.find(end_identifier, start_pos);
+
+        if (config.type_ == ConfigType::GuardOnly || config.type_ == ConfigType::Module) {
+          start_pos += search.length();
+        } else if (config.type_ == ConfigType::UpdateOnly) {
+          start_pos = str.find("->", start_pos) + 2;
+        }
 
         if (end_pos != std::string::npos && end_pos != 0) {
           std::string expression = config.expression_;
@@ -130,9 +143,8 @@ void Grid::applyOverwrites(std::string& str, std::vector<Configuration>& configu
       }
   }
 }
-void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration ,const prism::ModelType& modelType) {
+void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configuration) {
   cells northRestriction, eastRestriction, southRestriction, westRestriction;
-
   cells walkable = floor;
   walkable.insert(walkable.end(), goals.begin(), goals.end());
   walkable.insert(walkable.end(), boxes.begin(), boxes.end());
@@ -149,7 +161,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
 
 
   std::map<std::string, cells> wallRestrictions = {{"North", northRestriction}, {"East", eastRestriction}, {"South", southRestriction}, {"West", westRestriction}};
-  std::map<std::string, cells> slipperyTiles    = {{"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}};
+  std::map<std::string, cells> slipperyTiles    = {{"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}, {"NorthWest", slipperyNorthWest}, {"NorthEast", slipperyNorthEast},{"SouthWest", slipperySouthWest},{"SouthEast", slipperySouthEast}};
 
   std::vector<AgentName> agentNames;
   std::transform(agentNameAndPositionMap.begin(),
@@ -158,22 +170,16 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
                  [](const std::map<AgentNameAndPosition::first_type,AgentNameAndPosition::second_type>::value_type &pair){return pair.first;});
   std::string agentName = agentNames.at(0);
 
-  prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals);
-  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, boxes, balls, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, faultyProbability, !lava.empty(), !goals.empty());
+  prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals, agentNameAndPositionMap, faultyProbability > 0.0);
+  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, faultyProbability, !lava.empty(), !goals.empty());
 
   modules.printModelType(modelType);
   for(const auto &agentName : agentNames) {
     formulas.print(agentName);
   }
-  //std::vector<std::string> constants {"const double prop_zero = 0/9;",
-  //                                    "const double prop_intended = 6/9;",
-  //                                    "const double prop_turn_intended = 6/9;",
-  //                                    "const double prop_displacement = 3/9;",
-  //                                    "const double prop_turn_displacement = 3/9;",
-  //                                    "const int width = " + std::to_string(maxBoundaries.first) + ";",
-  //                                    "const int height = " + std::to_string(maxBoundaries.second) + ";"
-  //                                    };
-  //modules.printConstants(os, constants);
+  if(agentNameAndPositionMap.size() > 1) formulas.printCollisionFormula(agentName);
+  formulas.printInitStruct();
+
   modules.print();
 
 
@@ -186,4 +192,9 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   //if (!configuration.empty()) {
   //  modules.printConfiguration(os, configuration);
   //}
+}
+
+void Grid::setModelType(prism::ModelType type)
+{
+  modelType = type;
 }
