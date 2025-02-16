@@ -20,6 +20,7 @@ enum class Type : char {
   Lava       = 'V',
   Agent      = 'X',
   Adversary  = 'Z',
+  Slippery   = 'S',
   SlipperyNorth = 'n',
   SlipperySouth = 's',
   SlipperyEast  = 'e',

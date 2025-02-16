@@ -62,6 +62,7 @@ template <typename It>
       ("B", Type::Box)
       ("G", Type::Goal)
       ("V", Type::Lava)
+      ("S", Type::Slippery)
       ("n", Type::SlipperyNorth)
       ("e", Type::SlipperyEast)
       ("s", Type::SlipperySouth)

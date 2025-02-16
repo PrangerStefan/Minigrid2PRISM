@@ -67,7 +67,6 @@ namespace prism {
     for(const auto& [direction, cells] : restrictions) {
       printRestrictionFormula(agentName, direction, cells);
     }
-
     if(slipperyBehaviour()) {
       for(const auto& [direction, cells] : slipperyTiles) {
         printIsOnFormula(agentName, "Slippery", cells, direction);
@@ -235,7 +234,7 @@ namespace prism {
   }
 
   bool PrismFormulaPrinter::slipperyBehaviour() const {
-    return !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
+    return !slipperyTiles.at("Slippery").empty() || !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
   }
   bool PrismFormulaPrinter::anyPortableObject() const {
     return !keys.empty();

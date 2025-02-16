@@ -11,6 +11,7 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(walls),         [](cell c) { return c.type == Type::Wall; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lava),          [](cell c) { return c.type == Type::Lava; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(floor),         [](cell c) { return c.type == Type::Floor; }); // TODO CHECK IF ALL AGENTS ARE ADDED TO FLOOR
+  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(slippery),      [](cell c) { return c.type == Type::Slippery; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorth), [](cell c) { return c.type == Type::SlipperyNorth; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast),  [](cell c) { return c.type == Type::SlipperyEast; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) { return c.type == Type::SlipperySouth; });
@@ -26,6 +27,7 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(boxes),         [](cell c) { return c.type == Type::Box; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(balls),         [](cell c) { return c.type == Type::Ball; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(adversaries),   [](cell c) { return c.type == Type::Adversary; });
+
   agent = *std::find_if(gridCells.begin(), gridCells.end(), [](cell c) { return c.type == Type::Agent; });
   floor.push_back(agent);
 
@@ -65,7 +67,7 @@ Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float>
       backgroundTiles.emplace(color, cellsOfColor);
     }
   }
-  
+
   if (adversaries.empty()) {
     modelType = prism::ModelType::MDP;
   } else {
@@ -161,7 +163,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
 
 
   std::map<std::string, cells> wallRestrictions = {{"North", northRestriction}, {"East", eastRestriction}, {"South", southRestriction}, {"West", westRestriction}};
-  std::map<std::string, cells> slipperyTiles    = {{"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}, {"NorthWest", slipperyNorthWest}, {"NorthEast", slipperyNorthEast},{"SouthWest", slipperySouthWest},{"SouthEast", slipperySouthEast}};
+  std::map<std::string, cells> slipperyTiles    = {{"Slippery", slippery}, {"North", slipperyNorth}, {"East", slipperyEast}, {"South", slipperySouth}, {"West", slipperyWest}, {"NorthWest", slipperyNorthWest}, {"NorthEast", slipperyNorthEast},{"SouthWest", slipperySouthWest},{"SouthEast", slipperySouthEast}};
 
   std::vector<AgentName> agentNames;
   std::transform(agentNameAndPositionMap.begin(),

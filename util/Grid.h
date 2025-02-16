@@ -42,6 +42,7 @@ class Grid {
 
     cells walls;
     cells floor;
+    cells slippery;
     cells slipperyNorth;
     cells slipperyEast;
     cells slipperySouth;
