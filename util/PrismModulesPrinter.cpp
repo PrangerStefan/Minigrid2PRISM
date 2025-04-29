@@ -5,10 +5,10 @@
 #include <stdexcept>
 
 
-std::string northUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"-1)"; }
-std::string southUpdate(const AgentName &a) { return "(row"+a+"'=row"+a+"+1)"; }
-std::string eastUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"+1)"; }
-std::string westUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"-1)"; }
+std::string northUpdate(const AgentName &a) { return "min(WIDTH, max(1, row"+a+"'=row"+a+"-1))"; }
+std::string southUpdate(const AgentName &a) { return "min(WIDTH, max(1, row"+a+"'=row"+a+"+1))"; }
+std::string eastUpdate(const AgentName &a)  { return "min(HEIGHT, max(1, col"+a+"'=col"+a+"+1))"; }
+std::string westUpdate(const AgentName &a)  { return "min(HEIGHT, max(1, col"+a+"'=col"+a+"-1))"; }
 
 namespace prism {
 
@@ -250,7 +250,7 @@ namespace prism {
     if(slipperyBehaviour())      guard += " & !" + a + "IsOnSlippery";
     if(anyLava)                  guard += " & !" + a + "IsOnLava";
     if(anyGoals && a == "Agent") guard += " & !" + a + "IsOnGoal";
-    guard += " & !" + a + "CannotMove" + direction + "Wall";
+    //guard += " & !" + a + "CannotMove" + direction + "Wall";
     if(anyPortableObject() || !lockedDoors.empty() || !unlockedDoors.empty()) guard += " & !" + a + "CannotMoveConditionally";
     guard += " -> ";
     return guard;

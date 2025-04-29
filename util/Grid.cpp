@@ -181,11 +181,10 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   }
   if(agentNameAndPositionMap.size() > 1) formulas.printCollisionFormula(agentName);
   formulas.printInitStruct();
+  os << "const int WIDTH = " << maxBoundaries.first << ";\n";
+  os << "const int HEIGHT = " << maxBoundaries.second << ";\n";
 
   modules.print();
-
-
-
 
   //if(!stateRewards.empty()) {
   //  modules.printRewards(os, agentName, stateRewards, lava, goals, backgroundTiles);
