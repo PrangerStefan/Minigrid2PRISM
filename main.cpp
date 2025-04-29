@@ -3,6 +3,7 @@
 #include "util/Grid.h"
 #include "util/ConfigYaml.h"
 
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -163,7 +164,7 @@ int main(int argc, char* argv[]) {
       setProbability(properties, parsed_properties, probTurnIntendedIdentifier, probTurnIntended);
     }
     if(ok) {
-      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, faultyProbability);
+      Grid grid(contentCells, backgroundCells, stateRewards, probIntended, probTurnIntended, faultyProbability);
 
       auto modelTypeIter = std::find_if(parsed_properties.begin(), parsed_properties.end(), [](const Property&  obj) -> bool {return obj.property == "modeltype";});
       prism::ModelType modelType = prism::ModelType::MDP;;
@@ -176,7 +177,7 @@ int main(int argc, char* argv[]) {
 
         grid.setModelType(modelType);
       }
-  
+
 
 
       //grid.printToPrism(std::cout, configurations);

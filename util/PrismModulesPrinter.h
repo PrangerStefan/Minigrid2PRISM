@@ -16,7 +16,7 @@ std::string westUpdate(const AgentName &a);
 namespace prism {
   class PrismModulesPrinter {
     public:
-      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
+      PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float probTurnIntended, const float faultyProbability, const bool anyLava, const bool anyGoals);
 
       std::ostream& print();
 
@@ -40,10 +40,12 @@ namespace prism {
       void printTurnActionsForRobot(const std::string &a);
       void printNonMovementActionsForRobot(const AgentName &agentName);
       void printSlipperyMovementActionsForRobot(const AgentName &a);
+      void printSlipperyMovementActionsForSlippery(const AgentName &a);
       void printSlipperyMovementActionsForNorth(const AgentName &a);
       void printSlipperyMovementActionsForEast(const AgentName &a);
       void printSlipperyMovementActionsForSouth(const AgentName &a);
       void printSlipperyMovementActionsForWest(const AgentName &a);
+      void printSlipperyTurnActionsForSlippery(const AgentName &a);
       void printSlipperyTurnActionsForNorth(const AgentName &a);
       void printSlipperyTurnActionsForEast(const AgentName &a);
       void printSlipperyTurnActionsForSouth(const AgentName &a);
@@ -113,6 +115,7 @@ namespace prism {
       size_t numberOfPlayer;
       float const faultyProbability;
       float const probIntended;
+      float const probTurnIntended;
       std::vector<Configuration> configuration;
       std::vector<ViewDirection> viewDirections = {0, 1, 2, 3};
       std::map<ViewDirection, std::string> viewDirectionToString = {{0, "East"}, {1, "South"}, {2, "West"}, {3, "North"}};

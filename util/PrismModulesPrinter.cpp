@@ -12,8 +12,8 @@ std::string westUpdate(const AgentName &a)  { return "(col"+a+"'=col"+a+"-1)"; }
 
 namespace prism {
 
-  PrismModulesPrinter::PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float faultyProbability, const bool anyLava, const bool anyGoals)
-    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), faultyProbability(faultyProbability), anyLava(anyLava), anyGoals(anyGoals) {
+  PrismModulesPrinter::PrismModulesPrinter(std::ostream& os, const ModelType &modelType, const coordinates &maxBoundaries, const cells &lockedDoors, const cells &unlockedDoors, const cells &keys, const std::map<std::string, cells> &slipperyTiles, const AgentNameAndPositionMap &agentNameAndPositionMap, std::vector<Configuration> config, const float probIntended, const float probTurnIntended, const float faultyProbability, const bool anyLava, const bool anyGoals)
+    : os(os), modelType(modelType), maxBoundaries(maxBoundaries), lockedDoors(lockedDoors), unlockedDoors(unlockedDoors), keys(keys), slipperyTiles(slipperyTiles), agentNameAndPositionMap(agentNameAndPositionMap), configuration(config), probIntended(probIntended), probTurnIntended(probTurnIntended), faultyProbability(faultyProbability), anyLava(anyLava), anyGoals(anyGoals) {
       numberOfPlayer = agentNameAndPositionMap.size();
       size_t index = 0;
       for(auto begin = agentNameAndPositionMap.begin(); begin != agentNameAndPositionMap.end(); begin++, index++) {
@@ -283,6 +283,10 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForRobot(const AgentName &a) {
+    if(!slipperyTiles.at("Slippery").empty()) {
+      printSlipperyMovementActionsForSlippery(a);
+      printSlipperyTurnActionsForSlippery(a);
+    }
     if(!slipperyTiles.at("North").empty()) {
       printSlipperyMovementActionsForNorth(a);
       printSlipperyTurnActionsForNorth(a);
@@ -316,10 +320,47 @@ namespace prism {
       printSlipperyTurnActionsForSouthWest(a);
     }
   }
+  void PrismModulesPrinter::printSlipperyMovementActionsForSlippery(const AgentName &a) {
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {"!"+a+"CannotSlipEast", "!"+a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended, eastUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)}, {(1 - probIntended) * 0.5, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {    a+"CannotSlipEast", "!"+a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                {0.5                     , northUpdate(a)}, {0.5                     , southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {"!"+a+"CannotSlipEast",     a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, eastUpdate(a)},                  {(1 - probIntended) * 0.5, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {"!"+a+"CannotSlipEast", "!"+a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, eastUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)}                  }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {    a+"CannotSlipEast",     a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                                                            { 1                      , southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {"!"+a+"CannotSlipEast",     a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {1           , eastUpdate(a)},                                                                                        }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {    a+"CannotSlipEast", "!"+a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                {1                       , northUpdate(a)},                                            }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 0, {    a+"CannotSlipEast",     a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                                                                                                       }) << ";\n";
+
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended, southUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)}, {(1 - probIntended) * 0.5, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {    a+"CannotSlipSouth", "!"+a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                 {0.5                     , eastUpdate(a)}, {0.5                     , westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {"!"+a+"CannotSlipSouth",     a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, southUpdate(a)},                 {(1 - probIntended) * 0.5, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, southUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)}                 }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {    a+"CannotSlipSouth",     a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                                                            { 1                      , westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {"!"+a+"CannotSlipSouth",     a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {1           , southUpdate(a)},                                                                                       }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {    a+"CannotSlipSouth", "!"+a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                  {1                       , eastUpdate(a)},                                           }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 1, {    a+"CannotSlipSouth",     a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                                                                                                       }) << ";\n";
+
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {"!"+a+"CannotSlipWest", "!"+a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended, westUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)}, {(1 - probIntended) * 0.5, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {    a+"CannotSlipWest", "!"+a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                {0.5                     , northUpdate(a)}, {0.5                     , southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {"!"+a+"CannotSlipWest",     a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, westUpdate(a)},                  {(1 - probIntended) * 0.5, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {"!"+a+"CannotSlipWest", "!"+a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, westUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)}                  }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {    a+"CannotSlipWest",     a+"CannotSlipNorth", "!"+a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                                                            { 1                      , southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {"!"+a+"CannotSlipWest",     a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", { {1           , westUpdate(a)},                                                                                        }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {    a+"CannotSlipWest", "!"+a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                {1                       , northUpdate(a)},                                            }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 2, {    a+"CannotSlipWest",     a+"CannotSlipNorth",     a+"CannotSlipSouth"}) << printSlipperyMovementUpdate(a, "", {                                                                                                                       }) << ";\n";
+
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended, northUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)}, {(1 - probIntended) * 0.5, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {    a+"CannotSlipNorth", "!"+a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                 {0.5                     , eastUpdate(a)}, {0.5                     , westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {"!"+a+"CannotSlipNorth",     a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, northUpdate(a)},                 {(1 - probIntended) * 0.5, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {probIntended + (1 - probIntended) * 0.5, northUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)}                 }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {    a+"CannotSlipNorth",     a+"CannotSlipEast", "!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                                                            { 1                      , westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {"!"+a+"CannotSlipNorth",     a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", { {1           , northUpdate(a)},                                                                                       }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {    a+"CannotSlipNorth", "!"+a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                  {1                       , eastUpdate(a)},                                           }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "Slippery", 3, {    a+"CannotSlipNorth",     a+"CannotSlipEast",     a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "", {                                                                                                                       }) << ";\n";
+  }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForNorth(const AgentName &a) {
-    actionStream << printSlipperyMovementGuard(a, "North", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, northUpdate(a)}, {(1 - probIntended) * 1/2, northUpdate(a)+"&"+eastUpdate(a)}, {(1 - probIntended) * 1/2, northUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "North", 3, {    a+"CannotSlipNorth", "!"+a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {1/2, northUpdate(a)+"&"+eastUpdate(a)}, {1/2, northUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "North", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, northUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)+"&"+eastUpdate(a)}, {(1 - probIntended) * 0.5, northUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "North", 3, {    a+"CannotSlipNorth", "!"+a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {0.5, northUpdate(a)+"&"+eastUpdate(a)}, {0.5, northUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "North", 3, {"!"+a+"CannotSlipNorth",     a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, northUpdate(a)}, {(1 - probIntended), northUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "North", 3, {"!"+a+"CannotSlipNorth", "!"+a+"CannotSlipNorthEast",     a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {probIntended, northUpdate(a)}, {(1 - probIntended), northUpdate(a)+"&"+eastUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "North", 3, {    a+"CannotSlipNorth",     a+"CannotSlipNorthEast", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "North", { {1, northUpdate(a)+"&"+westUpdate(a) } }) << ";\n";
@@ -342,8 +383,8 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForEast(const AgentName &a) {
-    actionStream << printSlipperyMovementGuard(a, "East", 0, {"!"+a+"CannotSlipEast", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, eastUpdate(a)}, {(1 - probIntended) * 1/2, eastUpdate(a)+"&"+southUpdate(a)}, {(1 - probIntended) * 1/2, eastUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "East", 0, {    a+"CannotSlipEast", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {1/2, eastUpdate(a)+"&"+southUpdate(a)}, {1/2, eastUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "East", 0, {"!"+a+"CannotSlipEast", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, eastUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)+"&"+southUpdate(a)}, {(1 - probIntended) * 0.5, eastUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "East", 0, {    a+"CannotSlipEast", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {0.5, eastUpdate(a)+"&"+southUpdate(a)}, {0.5, eastUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "East", 0, {"!"+a+"CannotSlipEast",     a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, eastUpdate(a)}, {(1 - probIntended), eastUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "East", 0, {"!"+a+"CannotSlipEast", "!"+a+"CannotSlipSouthEast",     a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, eastUpdate(a)}, {(1 - probIntended), eastUpdate(a)+"&"+southUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "East", 0, {    a+"CannotSlipEast",     a+"CannotSlipSouthEast", "!"+a+"CannotSlipNorthEast"}) << printSlipperyMovementUpdate(a, "East", { {1, eastUpdate(a)+"&"+northUpdate(a) } }) << ";\n";
@@ -361,13 +402,13 @@ namespace prism {
     actionStream << printSlipperyMovementGuard(a, "East", 1, {"!"+a+"CannotSlipSouth",     a+"CannotSlipSouthEast"}) << printSlipperyMovementUpdate(a, "East", { {1, southUpdate(a) } }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "East", 1, {    a+"CannotSlipSouth",     a+"CannotSlipSouthEast"}) << printSlipperyMovementUpdate(a, "East", {}) << ";\n";
 
-    actionStream << printSlipperyMovementGuard(a, "East", 2, {"!"+a+"CannotSlipEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, eastUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "East", 2, {"!"+a+"CannotSlipEast"}) << printSlipperyMovementUpdate(a, "East", { {probIntended, westUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "East", 2, {    a+"CannotSlipEast"}) << printSlipperyMovementUpdate(a, "East", { {1, "true"} }) << ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForSouth(const AgentName &a) {
-    actionStream << printSlipperyMovementGuard(a, "South", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, southUpdate(a)}, {(1 - probIntended) * 1/2, southUpdate(a)+"&"+eastUpdate(a)}, {(1 - probIntended) * 1/2, southUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "South", 1, {    a+"CannotSlipSouth", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {1/2, southUpdate(a)+"&"+eastUpdate(a)}, {1/2, southUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "South", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, southUpdate(a)}, {(1 - probIntended) * 0.5, southUpdate(a)+"&"+eastUpdate(a)}, {(1 - probIntended) * 0.5, southUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "South", 1, {    a+"CannotSlipSouth", "!"+a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {0.5, southUpdate(a)+"&"+eastUpdate(a)}, {0.5, southUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "South", 1, {"!"+a+"CannotSlipSouth",     a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, southUpdate(a)}, {(1 - probIntended), southUpdate(a)+"&"+westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "South", 1, {"!"+a+"CannotSlipSouth", "!"+a+"CannotSlipSouthEast",     a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {probIntended, southUpdate(a)}, {(1 - probIntended), southUpdate(a)+"&"+eastUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "South", 1, {    a+"CannotSlipSouth",     a+"CannotSlipSouthEast", "!"+a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "South", { {1, southUpdate(a)+"&"+westUpdate(a) } }) << ";\n";
@@ -390,8 +431,8 @@ namespace prism {
   }
 
   void PrismModulesPrinter::printSlipperyMovementActionsForWest(const AgentName &a) {
-    actionStream << printSlipperyMovementGuard(a, "West", 2, {"!"+a+"CannotSlipWest", "!"+a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, westUpdate(a)}, {(1 - probIntended) * 1/2, westUpdate(a)+"&"+southUpdate(a)}, {(1 - probIntended) * 1/2, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyMovementGuard(a, "West", 2, {    a+"CannotSlipWest", "!"+a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {1/2, westUpdate(a)+"&"+southUpdate(a)}, {1/2, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "West", 2, {"!"+a+"CannotSlipWest", "!"+a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, westUpdate(a)}, {(1 - probIntended) * 0.5, westUpdate(a)+"&"+southUpdate(a)}, {(1 - probIntended) * 0.5, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "West", 2, {    a+"CannotSlipWest", "!"+a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {0.5, westUpdate(a)+"&"+southUpdate(a)}, {0.5, westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 2, {"!"+a+"CannotSlipWest",     a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, westUpdate(a)}, {(1 - probIntended), westUpdate(a)+"&"+northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 2, {"!"+a+"CannotSlipWest", "!"+a+"CannotSlipSouthWest",    a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, westUpdate(a)}, {(1 - probIntended), westUpdate(a)+"&"+southUpdate(a)} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 2, {    a+"CannotSlipWest",     a+"CannotSlipSouthWest", "!"+a+"CannotSlipNorthWest"}) << printSlipperyMovementUpdate(a, "West", { {1, westUpdate(a)+"&"+northUpdate(a) } }) << ";\n";
@@ -409,46 +450,52 @@ namespace prism {
     actionStream << printSlipperyMovementGuard(a, "West", 1, {"!"+a+"CannotSlipSouth",     a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "West", { {1, southUpdate(a) } }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 1, {    a+"CannotSlipSouth",     a+"CannotSlipSouthWest"}) << printSlipperyMovementUpdate(a, "West", {}) << ";\n";
 
-    actionStream << printSlipperyMovementGuard(a, "West", 0, {"!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, westUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
+    actionStream << printSlipperyMovementGuard(a, "West", 0, {"!"+a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "West", { {probIntended, eastUpdate(a) }, {1 - probIntended, "true"} }) << ";\n";
     actionStream << printSlipperyMovementGuard(a, "West", 0, {    a+"CannotSlipWest"}) << printSlipperyMovementUpdate(a, "West", {{1, "true"}}) << ";\n";
   }
 
+  void PrismModulesPrinter::printSlipperyTurnActionsForSlippery(const AgentName &a) {
+    actionStream << printSlipperyTurnGuard(a, "right", "Slippery", RIGHT, {},  "true")     << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "Slippery", LEFT, {}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"-1)"} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "Slippery", LEFT, {}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=3)"} }) << ";\n";
+  }
+
   void PrismModulesPrinter::printSlipperyTurnActionsForNorth(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", "North", RIGHT, {"!"+a+"CannotSlipNorth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "right", "North", RIGHT, {"!"+a+"CannotSlipNorth"},  "true") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probTurnIntended, northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "right", "North", RIGHT, {    a+"CannotSlipNorth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << ";\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {"!"+a+"CannotSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probIntended, northUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {"!"+a+"CannotSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=3)"},     {1 - probIntended, northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {"!"+a+"CannotSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probTurnIntended, northUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {"!"+a+"CannotSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=3)"},     {1 - probTurnIntended, northUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {    a+"CannotSlipNorth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"-1)"} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "North", LEFT, {    a+"CannotSlipNorth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=3)"} }) << ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForEast(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", "East", RIGHT, {"!"+a+"CannotSlipEast"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, eastUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "right", "East", RIGHT, {"!"+a+"CannotSlipEast"},  "true") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probTurnIntended, eastUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "right", "East", RIGHT, {    a+"CannotSlipEast"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << ";\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {"!"+a+"CannotSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probIntended, eastUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {"!"+a+"CannotSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=3)"},     {1 - probIntended, eastUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {"!"+a+"CannotSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probTurnIntended, eastUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {"!"+a+"CannotSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=3)"},     {1 - probTurnIntended, eastUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {    a+"CannotSlipEast"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"-1)"} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "East", LEFT, {    a+"CannotSlipEast"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=3)"} }) << ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForSouth(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", "South", RIGHT, {"!"+a+"CannotSlipSouth"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "right", "South", RIGHT, {"!"+a+"CannotSlipSouth"},  "true") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probTurnIntended, southUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "right", "South", RIGHT, {    a+"CannotSlipSouth"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << ";\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {"!"+a+"CannotSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probIntended, southUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {"!"+a+"CannotSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=3)"},     {1 - probIntended, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {"!"+a+"CannotSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probTurnIntended, southUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {"!"+a+"CannotSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=3)"},     {1 - probTurnIntended, southUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {    a+"CannotSlipSouth"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"-1)"} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "South", LEFT, {    a+"CannotSlipSouth"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=3)"} }) << ";\n";
   }
 
   void PrismModulesPrinter::printSlipperyTurnActionsForWest(const AgentName &a) {
-    actionStream << printSlipperyTurnGuard(a, "right", "West", RIGHT, {"!"+a+"CannotSlipWest"},  "true") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probIntended, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "right", "West", RIGHT, {"!"+a+"CannotSlipWest"},  "true") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=mod(view"+a+"+1,4))"}, { 1 - probTurnIntended, westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "right", "West", RIGHT, {    a+"CannotSlipWest"}, "true") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=mod(view"+a+"+1,4))"} }) << ";\n";
 
-    actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {"!"+a+"CannotSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probIntended, westUpdate(a)} }) << ";\n";
-    actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {"!"+a+"CannotSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probIntended, "(view"+a+"'=3)"},     {1 - probIntended, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {"!"+a+"CannotSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=view"+a+"-1)"}, {1 - probTurnIntended, westUpdate(a)} }) << ";\n";
+    actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {"!"+a+"CannotSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {probTurnIntended, "(view"+a+"'=3)"},     {1 - probTurnIntended, westUpdate(a)} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {    a+"CannotSlipWest"}, "view"+a+">0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=view"+a+"-1)"} }) << ";\n";
     actionStream << printSlipperyTurnGuard(a, "left", "West", LEFT, {    a+"CannotSlipWest"}, "view"+a+"=0") << printSlipperyTurnUpdate(a, { {1, "(view"+a+"'=3)"} }) << ";\n";
   }
@@ -720,7 +767,7 @@ namespace prism {
   }
 
   bool PrismModulesPrinter::slipperyBehaviour() const {
-    return !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
+    return !slipperyTiles.at("Slippery").empty() || !slipperyTiles.at("North").empty() || !slipperyTiles.at("East").empty() || !slipperyTiles.at("South").empty() || !slipperyTiles.at("West").empty();
   }
 
   bool PrismModulesPrinter::isGame() const {

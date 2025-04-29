@@ -13,7 +13,7 @@
 
 class Grid {
   public:
-    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float faultyProbability = 0);
+    Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards = {}, const float probIntended = 1.0, const float probTurnIntended = 1.0, const float faultyProbability = 0);
 
     cells getGridCells();
 
@@ -64,5 +64,6 @@ class Grid {
 
     std::map<coordinates, float> stateRewards;
     const float probIntended;
+    const float probTurnIntended;
     const float faultyProbability;
 };

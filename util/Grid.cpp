@@ -3,15 +3,15 @@
 
 #include <algorithm>
 
-Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float faultyProbability)
-  : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), faultyProbability(faultyProbability)
+Grid::Grid(cells gridCells, cells background, const std::map<coordinates, float> &stateRewards, const float probIntended, const float probTurnIntended, const float faultyProbability)
+  : allGridCells(gridCells), background(background), stateRewards(stateRewards), probIntended(probIntended), probTurnIntended(probTurnIntended), faultyProbability(faultyProbability)
 {
   cell max = allGridCells.at(allGridCells.size() - 1);
   maxBoundaries = std::make_pair(max.column - 1, max.row - 1);
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(walls),         [](cell c) { return c.type == Type::Wall; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(lava),          [](cell c) { return c.type == Type::Lava; });
   std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(floor),         [](cell c) { return c.type == Type::Floor; }); // TODO CHECK IF ALL AGENTS ARE ADDED TO FLOOR
-  std::copy_if(gridCells.begin(),  gridCells.end(),  std::back_inserter(slippery),      [](cell c) { return c.type == Type::Slippery; });
+  std::copy_if(background.begin(), background.end(), std::back_inserter(slippery),      [](cell c) { return c.type == Type::Slippery; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyNorth), [](cell c) { return c.type == Type::SlipperyNorth; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperyEast),  [](cell c) { return c.type == Type::SlipperyEast; });
   std::copy_if(background.begin(), background.end(), std::back_inserter(slipperySouth), [](cell c) { return c.type == Type::SlipperySouth; });
@@ -173,7 +173,7 @@ void Grid::printToPrism(std::ostream& os, std::vector<Configuration>& configurat
   std::string agentName = agentNames.at(0);
 
   prism::PrismFormulaPrinter formulas(os, wallRestrictions, walls, lockedDoors, unlockedDoors, keys, slipperyTiles, lava, goals, agentNameAndPositionMap, faultyProbability > 0.0);
-  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, faultyProbability, !lava.empty(), !goals.empty());
+  prism::PrismModulesPrinter modules(os, modelType, maxBoundaries, lockedDoors, unlockedDoors, keys, slipperyTiles, agentNameAndPositionMap, configuration, probIntended, probTurnIntended, faultyProbability, !lava.empty(), !goals.empty());
 
   modules.printModelType(modelType);
   for(const auto &agentName : agentNames) {
